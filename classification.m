@@ -40,15 +40,18 @@ val_y = one_of_n(val_y);
 % initialize neural network
 rand('state',0);                % use fixed random seed to make results comparable
 nn = nnsetup([61 512 16]);      % number of nodes in layers - input, hidden, output
+                                % 61 is the number of neurons we have recordings for
+                                % 100 is just arbitrary number and you should change that
+                                % 16 is the number of areas with 1-of-N coding
 nn.learningRate = 0.1;          % multiply gradient by this when changing weights
 nn.momentum = 0.5;              % inertia - add this much of previous weight change
 nn.scaling_learningRate = 0.99; % multiply learning rate by this after each epoch
 %nn.activation_function = 'tanh_opt';   % activation function: tanh_opt, sigm or relu
-nn.dropoutFraction = 0.05;      % disable this much hidden nodes during each iteration
+%nn.dropoutFraction = 0.05;      % disable this much hidden nodes during each iteration
 %nn.weightPenaltyL2 = 0;        % penalize big weights by subtracting 
                                 % fraction of weights at each training iteration
 nn.output = 'softmax';          % use softmax output for classification
-opts.numepochs = 40;            % number of full sweeps through data
+opts.numepochs = 10;            % number of full sweeps through data
 opts.batchsize = 100;           % take a mean gradient step over this many samples
 opts.plot = 1;                  % enable plotting
 

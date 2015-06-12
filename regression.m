@@ -3,7 +3,7 @@ clear all;
 addpath(genpath('DeepLearnToolbox'));
 
 % load data
-load('data/features_new.mat');
+load('data/features_500.mat');
 
 % calculate sizes of training and validation set
 nr_samples = size(feature_matrix, 1);
