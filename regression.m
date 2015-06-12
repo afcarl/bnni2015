@@ -2,6 +2,15 @@
 clear all;
 addpath(genpath('DeepLearnToolbox'));
 
+% install package nan in Octave
+%sudo apt-get install octave-nan
+% or
+%pkg install -forge nan
+% load package nan in Octave
+%pkg load nan;
+% turn off paging in Octave
+more off;
+
 % load data
 load('data/features_500.mat');
 

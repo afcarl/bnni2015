@@ -2,6 +2,15 @@
 clear all;
 addpath(genpath('DeepLearnToolbox'));
 
+% install package nan in Octave
+%sudo apt-get install octave-nan
+% or
+%pkg install -forge nan
+% load package nan in Octave
+%pkg load nan;
+% turn off paging in Octave
+more off;
+
 % load data
 load('data/features.mat');
 load('data/Blocks.mat');
@@ -23,8 +32,7 @@ val_x = features(val_idx, :);
 val_y = Y(val_idx);
 
 % try linear classifier with default parameters for baseline
-linclass = fitcdiscr(train_x, train_y);
-val_predy = predict(linclass, val_x);
+val_predy = classify(val_x, train_x, train_y);
 correct = (val_y == val_predy);
 linear_accuracy = sum(correct) / size(correct,1)
 
