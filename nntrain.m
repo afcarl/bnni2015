@@ -61,7 +61,7 @@ for i = 1 : numepochs
 
     if opts.validation == 1
         loss = nneval(nn, loss, train_x, train_y, val_x, val_y);
-        str_perf = sprintf('; Full-batch train mse = %f, val mse = %f and accuracy=%f', loss.train.e(end), loss.val.e(end), loss.val.e_frac(end));
+        str_perf = sprintf('; Full-batch train mse = %f, val mse = %f', loss.train.e(end), loss.val.e(end));
     else
         loss = nneval(nn, loss, train_x, train_y);
         str_perf = sprintf('; Full-batch train err = %f', loss.train.e(end));
@@ -70,22 +70,9 @@ for i = 1 : numepochs
         nnupdatefigures(nn, fhandle, loss, opts, i);
     end
         
-    disp(['epoch ' num2str(i) '/' num2str(opts.numepochs) '. Took ' num2str(t) ' seconds' '. Mini-batch mean squared error on training set is ' num2str(mean(L((n-numbatches):(n-1)))) sprintf('\n') str_perf]);
+    disp(['epoch ' num2str(i) '/' num2str(opts.numepochs) '. Took ' num2str(t) ' seconds' '. Mini-batch mean squared error on training set is ' num2str(mean(L((n-numbatches):(n-1)))) str_perf]);
     nn.learningRate = nn.learningRate * nn.scaling_learningRate;
-    
-    % if learning is really not making progress, we should cancel it to not waste time
-    % we want to have error less than 90% in ten epochs, less than 70 in 20 and less than 50% in 40epochs
-    if (i>10 && loss.val.e_frac(end)>0.9) ||  (i>20 && loss.val.e_frac(end)>0.7) ||  (i>40 && loss.val.e_frac(end)>0.5)
-	   disp('Learining was going too slow, so we cancelled the process')       
-	   break;
-    end
-    %if the learning has reached a plateau and is really not improving any more, we stop
-    if (i>40 && (mean(loss.val.e_frac(i-20:i-15)) - mean(loss.val.e_frac(i-5:i)))<0.01)
-       mean(loss.val.e_frac(i-20:i-15))
-       mean(loss.val.e_frac(i-5:i))
-	   disp('Learning had not imporved anything in 20 epochs, so we stop here')
-	   break;
-    end
+
 end
 end
 
