@@ -2,12 +2,6 @@
 clear all;
 addpath(genpath('DeepLearnToolbox'));
 
-% install package nan in Octave
-%sudo apt-get install octave-nan
-% or
-%pkg install -forge nan
-% load package nan in Octave
-%pkg load nan;
 % turn off paging in Octave
 more off;
 
@@ -30,17 +24,27 @@ train_y = feature_matrix(train_idx, 72:73);
 val_x = feature_matrix(val_idx, 2:71);
 val_y = feature_matrix(val_idx, 72:73);
 
+% install package nan in Octave
+% in Ubuntu terminal: sudo apt-get install octave-nan
+% in Windows Octave: pkg install -auto -forge nan
+
+% load package nan in Octave (not needed if you installed with -auto)
+%pkg load nan;
+
 % try linear regression with default parameters for baseline
 
+% add bias term for regression
+train_x_bias = [ones(size(train_x, 1), 1) train_x];
+val_x_bias = [ones(size(val_x, 1), 1) val_x];
 % predict X values
-linregx = fitlm(train_x, train_y(:,1));
-val_pred(:,1) = predict(linregx, val_x);
+coeff1 = regress(train_y(:,1), train_x_bias);
+val_pred(:,1) = val_x_bias * coeff1;
 % predict Y values
-linregy = fitlm(train_x, train_y(:,2));
-val_pred(:,2) = predict(linregy, val_x);
+coeff2 = regress(train_y(:,2), train_x_bias);
+val_pred(:,2) = val_x_bias * coeff2;
 % calculate mean Euclidian distance between actual and predicted coordinates
 linear_mean_dist = mean(sqrt(sum((val_y - val_pred).^2, 2)));
-disp(['Baseline average distance: ' num2str(round(linear_mean_dist, 2)) 'cm']);
+disp(['Baseline average error: ' num2str(linear_mean_dist) 'cm']);
 
 % prepare data for DeepLearnToolbox
 
@@ -74,22 +78,17 @@ val_pred = nn.a{end};           % extract last layer node activations
 
 % calculate mean Euclidian distance between actual and predicted coordinates
 mean_dist = mean(sqrt(sum((val_y - val_pred).^2, 2)));
-disp(['Average error: ' num2str(round(mean_dist, 2)) 'cm']);
-
-%val_dist_zhurab = sqrt(mean(sum((val_y - val_pred).^2, 2)))
-%val_dist_tambet = mean(sqrt(sum((val_y - val_pred).^2, 2)))
-%val_dists_zhurab = sqrt(mean((val_y - val_pred).^2, 1))
-%val_dists_tambet = mean(abs(val_y - val_pred), 1)
+disp(['Average error: ' num2str(mean_dist) 'cm']);
 
 f = figure;
-for i=1:100
+for i=1:20
     figure(f);
     plot(val_y(i,1), val_y(i,2), 'b*', val_pred(i,1), val_pred(i,2), 'r*', 'MarkerSize', 10);
     xlim([80 270]);
     ylim([20 220]);
     xlabel('cm');
     ylabel('cm');
-    legend('actual', 'predicted', 'Location', 'bestoutside');
+    legend('actual', 'predicted', 'Location', 'northeastoutside');
     title('Rat location');
     pause(0.5);
 end

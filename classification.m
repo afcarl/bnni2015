@@ -2,12 +2,6 @@
 clear all;
 addpath(genpath('DeepLearnToolbox'));
 
-% install package nan in Octave
-%sudo apt-get install octave-nan
-% or
-%pkg install -forge nan
-% load package nan in Octave
-%pkg load nan;
 % turn off paging in Octave
 more off;
 
@@ -30,6 +24,13 @@ train_x = features(train_idx, :);
 train_y = Y(train_idx);
 val_x = features(val_idx, :);
 val_y = Y(val_idx);
+
+% install package nan in Octave
+% in Ubuntu terminal: sudo apt-get install octave-nan
+% in Windows Octave: pkg install -auto -forge nan
+
+% load package nan in Octave (not needed if you installed with -auto)
+%pkg load nan;
 
 % try linear classifier with default parameters for baseline
 val_predy = classify(val_x, train_x, train_y);

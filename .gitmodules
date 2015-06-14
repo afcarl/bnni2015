@@ -3,4 +3,4 @@
 	url = https://github.com/tambetm/DeepLearnToolbox.git
 [submodule "Whetlab-Matlab-Client"]
 	path = Whetlab-Matlab-Client
-	url = https://github.com/whetlab/Whetlab-Matlab-Client.git
+	url = https://github.com/tambetm/Whetlab-Matlab-Client.git
