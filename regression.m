@@ -1,6 +1,6 @@
 % clear workspace and add DeepLearnToolbox to search path
 clear all;
-addpath(genpath('DeepLearnToolbox'));
+addpath('utils', genpath('DeepLearnToolbox'));
 
 % turn off paging in Octave
 more off;
@@ -71,10 +71,7 @@ opts.plot = 1;                  % enable plotting
 nn = nntrain(nn, train_x, train_y, opts, val_x, val_y);
 
 % predict coordinates on validation set
-nn.testing = 1;
-nn = nnff(nn, val_x, val_y);    % do a feed-forward pass in neural network
-nn.testing = 0;
-val_pred = nn.a{end};           % extract last layer node activations
+val_pred = nnpredict(nn, val_x);
 
 % calculate mean Euclidian distance between actual and predicted coordinates
 mean_dist = mean(sqrt(sum((val_y - val_pred).^2, 2)));

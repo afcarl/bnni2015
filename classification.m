@@ -1,6 +1,6 @@
 % clear workspace and add DeepLearnToolbox to search path
 clear all;
-addpath(genpath('DeepLearnToolbox'));
+addpath('utils', genpath('DeepLearnToolbox'));
 
 % turn off paging in Octave
 more off;
@@ -42,6 +42,7 @@ linear_accuracy = sum(correct) / size(correct,1)
 % normalize input to have zero mean and unit variance
 [train_x, mu, sigma] = zscore(train_x);
 val_x = normalize(val_x, mu, sigma);
+
 % DeepLearnToolbox expects one-of-N coding for classes
 train_y = one_of_n(train_y);
 val_y = one_of_n(val_y);
@@ -70,7 +71,7 @@ nn = nntrain(nn, train_x, train_y, opts, val_x, val_y);
 accuracy = 1 - nntest(nn, val_x, val_y)
 
 % plot confusion matrix for the classes
-val_predy = nnpredict(nn, val_x);
+val_predy = nnclassify(nn, val_x);
 val_truth = Y(val_idx);
 figure;
 plot_confmatrix(val_truth, val_predy);

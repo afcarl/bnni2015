@@ -49,14 +49,14 @@ The 2014 Nobel prize in Physiology was awarded to Dr. John M. O'Keefe, Dr. May-B
 
 At first we divide the experimental arena into 16 blocks and approach this as a classification problem. Next we make the task harder by trying to predict the rat's position (X and Y coordinates) directly, i.e. address this as a regression problem. Finally we automate the tedious task of hyperparameter optimization using Whetlab. 
 
-The data we use is multi-neuron electrophysiological recordings from the Buzsaki lab in New York. The data has been preprocessed as number of spikes in 200ms time window.
+The data we use is multi-neuron electrophysiological recordings from the Buzsaki lab in New York. The data has been preprocessed as number of spikes in 500ms time window.
 
 %
 % Installation
 %
 \section{Technicalities}
 
-You can use either Matlab or Octave to do the practice exercises. Matlab is faster and more user-friendly, but Octave is free and open-source and has been catching up with Matlab lately. Be sure to install at least version 3.8 of Octave, which includes the experimental GUI.
+You can use either Matlab or Octave to do the practice exercises. Matlab is faster and more user-friendly, but Octave is free and has been catching up with Matlab lately. Be sure to install at least version 3.8 of Octave, which includes the experimental GUI.
 \begin{itemize}
 	\item \textbf{Ubuntu:} \texttt{sudo apt-get install octave}. To start the GUI run this from command line: \texttt{octave --force-gui}. Then you can lock the application to the launch bar. 
 	\item \textbf{Windows:} the most current version can be downloaded from here:\\ \url{https://ftp.gnu.org/gnu/octave/windows/}.
@@ -114,9 +114,9 @@ Common activation functions are $sigmoid(x)=\frac{1}{1 - e^{-x}}$ (squashes any 
 
 The beauty of artificial neural networks is, that they can learn to map inputs to outputs, given enough examples. The learning is accomplished by changing weights between neurons. The universal approximation theorem states, that any function can be approximated to a given precision using artificial neural network with just one hidden layer. In practice this result is irrelevant, because the claim that function can be represented by network does not say anything if this representation can be learned by the network. Still it is important to remember that artificial neural networks are nothing more than universal function approximators.
 
-How does the learning happen in artificial neural networks? We have to start by defining a loss function, which measures how good the networks' current prediction is -- how well its outputs match the expected values. Small loss is good, big loss is bad. The most common loss function is mean squared error (MSE) -- you just square all differences between predicted and expected values, sum over all output nodes and average over the training batch. It is easy to see, that better predictions result in lower loss values with MSE. However, if outputs of your network are probabilities, then you would use a different loss function (cross-entropy loss), but the general idea stays the same.
+We start first by defining a loss function, which measures how good the networks' current prediction is -- how well its outputs match the expected values. Small loss is good, big loss is bad. The most common loss function is mean squared error (MSE) -- you just square all differences between predicted and expected values, sum over all output nodes and average over the training batch. It is easy to see, that better predictions result in lower loss values with MSE. If outputs of your network are probabilities, then you would use a different loss function (cross-entropy loss), but the general idea stays the same.
 
-To learn you would need to change the weights in a way, that decreases the loss function. How can one achieve that? The most common method is called gradient descent. First we take partial derivatives of the loss function with respect to each weight. These derivatives -- the gradients -- give us an estimate of how much changing each particular weight would affect the loss function. To calculate those derivatives efficiently in an artificial neural network we use the backpropagation algorithm. This algorithm basically consists in applying the chain rule to find the derivatives of bottom layers from the derivatives of upper layers. Not wanting to go into details in here, let's just assume that somehow we can know the gradients and thus how much we should add to or subtract from each weight to make the loss decrease.
+To learn we would need to change the weights in a way, that decreases the loss function. The most common method to achieve that is called gradient descent. First we take partial derivatives of the loss function with respect to each weight. These derivatives -- the gradients -- give us an estimate of how much changing each particular weight would affect the loss function. To calculate those derivatives efficiently in an artificial neural network we use the backpropagation algorithm. This algorithm basically consists in applying the chain rule to find the derivatives of bottom layers from the derivatives of upper layers. Not wanting to go into details in here, let's just assume that somehow we know the gradients and thus how much we should add to or subtract from each weight to make the loss decrease.
 
 \begin{figure}[h]
 	\centering
@@ -128,7 +128,11 @@ To learn you would need to change the weights in a way, that decreases the loss 
 %
 \end{figure}
 
-The complex nature of artificial neural networks means, that there might be more than one set of weight values for which the loss function has the minimal value. Moreover there are many local minimas, making it a non-convex optimization problem. Often the metaphore of "loss landscape" is used -- if you plotted loss value over many weight value combinations, then it would form a landscape of many hills and valleys. If you just followed the gradient (go downhill in the direction of the steepest descent), then it is easy to get stuck in a local minima (a shallow valley). People have come up with many techniques to work around this issue, but in principle it remains unresolved. Good news is that many of the local minimas are good enough for all purposes and that there are plenty of them.
+The complex nature of artificial neural networks means, that there might be more than one set of weight values for which the loss function has the minimal value. Moreover there are many local minimas, making it a non-convex optimization problem. Often the metaphore of "loss landscape" is used -- if you plotted loss value over many weight value combinations, then it would form a landscape of many hills and valleys. If you just followed the gradient (go downhill in the direction of the steepest descent), then it is easy to get stuck in a local minima (a shallow valley). People have come up with many techniques to work around this issue, but in principle it remains unresolved. Good news is that many of the local minimas are good enough and that there are plenty of them.
+
+\section{Preprocessing}
+
+TBD
 
 \newpage
 
@@ -148,7 +152,7 @@ Start by running the code in \texttt{classification.m} and observing the results
 		\item The first one displays the loss function value for both training and validation set. As this is a classification task we are using cross-entropy loss function. Its value is actually rather meaningless, we are more interested in the dynamics -- does it decrease, how fast, is the learning stable?
 		\item The second figure shows the misclassification rate -- the fraction of training samples for which the predicted class was wrong. You can calculate accuracy by subtracting this number from 1. Again, error rates for both the training and validation set are shown.
 	\end{itemize}
-	Usually those two graphs are correlated, so it suffices to only pay attention to the latter. Also the validation set performance is more informative than the training set performance.
+	Usually those two graphs are correlated, so it suffices to only pay attention to the latter. Also the validation set performance is more important than the training set performance.
 	\item After training is completed you should see the accuracy of neural network printed out. At first it might not be much better than the linear classifier.
 	\item Finally the confusion matrix is shown. Confusion matrix summarizes the errors our classifier made -- which classes were mistaken for which other classes.
 \end{enumerate}
@@ -157,7 +161,7 @@ Start by running the code in \texttt{classification.m} and observing the results
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=0.78\textwidth]{training_loss.png}
+	\includegraphics[width=0.66\textwidth]{training_loss.png}
 	\caption{Example of network achieving 70\% accuracy.}
 \end{figure}
 
@@ -172,8 +176,8 @@ Start by running the code in \texttt{classification.m} and observing the results
 	\item After that you should use \textbf{momentum} to speed up learning. Momentum adds inertia to weight updates -- at each update we do not just go towards the gradient, but also take in consideration the previous weight update. This results in a faster movement on long descents in one direction. Sometimes momentum may overshoot resulting in zig-zags on the graphs, but usually it helps to reach to minima faster. Usual values to try are 0.5, 0.9 and 0.95.
 	\item By now you should observe massive overfitting -- training set error is much smaller than validation set error. Basically network memorizes the training set and does not generalize to the validation set. There are several ways how to deal with overfitting:
 	\begin{description}
-		\item[Get more training data.] Data is the most effective regularizer, so if possible you should always use that option. However, in the reality it is rarely easy to get additional data. In such cases the following methods come to our aid.
-		\item[Use weight decay.] This is a well-known technique, that forces weights to have small values. It is implemented by adding a regularization term to the loss function, which comes down to decreasing all weights by some fraction of their current value during each training iteration (hence "weight decay"). You should start with low values of $10^{-4}$ and go up in powers on 10 until validation set accuracy does not improve any more.
+		\item[Get more training data.] Data is the most effective regularizer, so if possible you should always use that option. However, in the reality it is rarely easy to get additional data. In such cases the following methods come to your aid.
+		\item[Use weight decay.] This is a well-known technique, that forces weights to have small values. It is implemented by adding a regularization term to the loss function, which results in decreasing all weights by some fraction of their current value during each training iteration (hence "weight decay"). You should start with low values of $10^{-4}$ and go up in powers of 10 until validation set accuracy does not improve any more.
 		\item[Use dropout.] Dropout disables a random subset of hidden nodes during each training step. This forces nodes to be more individualistic, because they are not able to count on the other nodes being present. During testing all nodes are enabled, but their activation values must be decreased in order produce on average the same amount of input to the subsequent layer. This functions also as a crude approximation to the ensemble method -- basically we are averaging the behaviour of many networks with shared weights. Common dropout fraction to use is 0.5, but in some cases lower values might work better.
 
 \begin{figure}[h]
@@ -231,7 +235,7 @@ Use all the tricks you learned from the previous exercise. As the dataset is big
 %
 \section{Whetlab}
 
-As you probably saw with previous exercises, choosing the right hyperparameters can be tedious task. One of the methods that can help in this situation is Bayesian optimization. This is a specialized technique for finding the maximum values of functions that are very challenging to evaluate, due to their being very expensive or noisy. Hyperparameter optimization is one of such difficult problems -- training a machine learning system can be time and energy-consuming taking hours or even days. The applications of Bayesian optimisation are not limited to machine learning -- you could use it to suggest new settings for lab experiments or for tuning marketing tactics. Whetlab is a startup by top machine learning experts, that makes using Bayesian optimization especially easy. Unfortunately it works only in Matlab.\\
+As you probably saw with previous exercises, choosing the right hyperparameters can be tedious task. One of the methods that can help in this situation is Bayesian optimization. This is a specialized technique for finding the maximum values of functions that are very challenging to evaluate, due to their being very expensive or noisy. Hyperparameter optimization is one of such difficult problems -- training a machine learning system can be time and energy-consuming taking hours or even days. But the applications of Bayesian optimisation are not limited to machine learning -- you could use it to suggest new settings for lab experiments or for tuning marketing tactics. Whetlab is a startup by top machine learning experts, that makes using Bayesian optimization especially easy to use. Unfortunately it works only in Matlab.\\
 
  Start by going over the code in \texttt{whetlab\_regression.m}:
 
@@ -239,7 +243,7 @@ As you probably saw with previous exercises, choosing the right hyperparameters 
 	\item First half should already be familiar from previous exercise.
 	\item Thereafter the hyperparameters for Whetlab optimization are defined. \textbf{Your job is to fill in the ranges of those parameters based on the experience from previous exercises!} Notice how we use log scale for the learning rate and the number hidden nodes.
 	\item After that a new experiment is created using \texttt{whetlab()} function. \textbf{Make sure you include your name in the experiment name!} For the first run, the resume option must be set to $false$, but for the next runs it must be $true$.
-	\item Next, 10 experiments are run using hyperparameter values suggested by Whetlab. You can first run the commands in that loop manually and observe the results.
+	\item Next, 10 experiments are run using hyperparameter values suggested by Whetlab. You can first run the commands in that loop manually and observe the results. \textbf{Can you guess what would be the first values Whetlab suggests?}
 	\item Once you have made sure the code works as expected, you can run it for 10, 20 or 40 loops. While computer is crunching the numbers, you might want to read short introduction to Bayesian optimization from here: \url{https://www.whetlab.com/technology/}.
 	\item Finally the code plots out two graphs of the results. Whetlab homepage includes many more useful visualizations, but for that you have to sign up for the closed beta yourself: \url{https://www.whetlab.com/beta-signup/}.
 \end{enumerate}
