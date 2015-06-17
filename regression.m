@@ -6,10 +6,10 @@ addpath('utils', genpath('DeepLearnToolbox'));
 more off;
 
 % load data
-load('data/features_500.mat');
+load('data/data_500.mat');
 
 % calculate sizes of training and validation set
-nr_samples = size(feature_matrix, 1);
+nr_samples = size(spikes, 1);
 nr_train = 100000;              % must be divisible by batch size
 nr_val = nr_samples - nr_train;
 
@@ -19,10 +19,10 @@ perm = randperm(nr_samples);
 train_idx = perm(1:nr_train);
 val_idx = perm((nr_train + 1):(nr_train + nr_val));
 
-train_x = feature_matrix(train_idx, 2:71);
-train_y = feature_matrix(train_idx, 72:73);
-val_x = feature_matrix(val_idx, 2:71);
-val_y = feature_matrix(val_idx, 72:73);
+train_x = spikes(train_idx, :);
+train_y = coords(train_idx, :);
+val_x = spikes(val_idx, :);
+val_y = coords(val_idx, :);
 
 % install package nan in Octave
 % in Ubuntu terminal: sudo apt-get install octave-nan
@@ -54,7 +54,7 @@ val_x = normalize(val_x, mu, sigma);
 
 % initialize neural network
 rand('state',0)                 % use fixed random seed to make results comparable
-nn = nnsetup([70 1024 2]);      % number of nodes in layers - input, hidden, output
+nn = nnsetup([71 1024 2]);      % number of nodes in layers - input, hidden, output
 nn.learningRate = 0.001;        % multiply gradient by this when changing weights
 nn.momentum = 0.9;              % inertia - add this much of previous weight change
 nn.scaling_learningRate = 0.99; % multiply learning rate by this after each epoch
@@ -77,15 +77,20 @@ val_pred = nnpredict(nn, val_x);
 mean_dist = mean(sqrt(sum((val_y - val_pred).^2, 2)));
 disp(['Average error: ' num2str(mean_dist) 'cm']);
 
+% compare actual and predicted mouse locations
+sim_idx = 1:10:1000;              % dataset slice to use
+sim_x = spikes(sim_idx, :);       % spikes from original dataset
+sim_y = coords(sim_idx, :);       % actual coordinates from original dataset
+sim_pred = nnpredict(nn, sim_x);  % predicted coordinates from spikes
 f = figure;
-for i=1:20
+for i=1:size(sim_x,1)
     figure(f);
-    plot(val_y(i,1), val_y(i,2), 'b*', val_pred(i,1), val_pred(i,2), 'r*', 'MarkerSize', 10);
+    plot(sim_y(i,1), sim_y(i,2), 'b*', sim_pred(i,1), sim_pred(i,2), 'r*', 'MarkerSize', 10);
     xlim([80 270]);
     ylim([20 220]);
     xlabel('cm');
     ylabel('cm');
     legend('actual', 'predicted', 'Location', 'northeastoutside');
     title('Rat location');
-    pause(0.5);
+    drawnow;
 end

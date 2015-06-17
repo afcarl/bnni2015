@@ -1,13 +1,13 @@
 % clear workspace, add DeepLearnToolbox and Whetlab to search path
 clear all;
-addpath(genpath('DeepLearnToolbox'));
+addpath('utils', genpath('DeepLearnToolbox'));
 addpath(genpath('Whetlab-Matlab-Client'));
 
 % load data
-load('data/features_500.mat');
+load('data/data_500.mat');
 
 % calculate sizes of training and validation set
-nr_samples = size(feature_matrix, 1);
+nr_samples = size(spikes, 1);
 nr_train = 100000;              % must be divisible by batch size
 nr_val = nr_samples - nr_train;
 
@@ -17,10 +17,10 @@ perm = randperm(nr_samples);
 train_idx = perm(1:nr_train);
 val_idx = perm((nr_train + 1):(nr_train + nr_val));
 
-train_x = feature_matrix(train_idx, 2:71);
-train_y = feature_matrix(train_idx, 72:73);
-val_x = feature_matrix(val_idx, 2:71);
-val_y = feature_matrix(val_idx, 72:73);
+train_x = spikes(train_idx, :);
+train_y = coords(train_idx, :);
+val_x = spikes(val_idx, :);
+val_y = coords(val_idx, :);
 
 % prepare data for DeepLearnToolbox
 
@@ -67,7 +67,7 @@ for i = 1:10
 
     % initialize neural network using parameters from Whetlab
     rand('state',0);
-    nn = nnsetup([70 2^job.log2_hidden_nodes 2]);
+    nn = nnsetup([71 2^job.log2_hidden_nodes 2]);
     nn.learningRate = 10^job.log10_learning_rate;
     nn.momentum = job.momentum;
     nn.scaling_learningRate = job.learning_rate_scale;
@@ -77,15 +77,13 @@ for i = 1:10
     nn.output = 'linear';
     opts.numepochs = 10;
     opts.batchsize = 100;
+    opts.plot = 0;
 
     % train neural network, no plotting this time
     nn = nntrain(nn, train_x, train_y, opts);
 
     % predict coordinates on validation set
-    nn.testing = 1;
-    nn = nnff(nn, val_x, val_y);    % do a feed-forward pass in neural network
-    nn.testing = 0;
-    val_pred = nn.a{end};           % extract last layer node activations
+    val_pred = nnpredict(nn, val_x);
 
     % calculate mean Euclidian distance between actual and predicted coordinates
     mean_dist = mean(sqrt(sum((val_y - val_pred).^2, 2)));

@@ -38,8 +38,8 @@
 \medskip}
 \newcommand{\question}[2]{\setlength\parindent{0mm}\ \\$\mathbf{Q_#1:}$ #2\ \\}
 
-\author{\large{Tambet Matiisen, Raul Vicente, Zurab Bzhalava}}
-\title{\huge{3rd Baltic-Nordic Summer School on Neuroinformatics (BNNI 2015)}\\\LARGE{Practice on Artificial Neural Networks}}
+\author{\large{Tambet Matiisen, Ardi Tampuu}}
+\title{\huge{Practice on Artificial Neural Networks}\\\LARGE{BNNI 2015 @ University of Tartu}}
 
 \begin{document}
 \maketitle
@@ -47,11 +47,11 @@
 %
 % Intro
 %
-The 2014 Nobel prize in Physiology was awarded to Dr. John M. O'Keefe, Dr. May-Britt Moser and Dr. Edvard I. Moser for discovering particular cells in the brain that provide the sense of place and navigation. In this practice session, we are going to use computational approach to study the animal "GPS" system. In particular, we are going to use artificial neural networks to predict a rat's position based just on its hippocampal neural activity.
+The 2014 Nobel prize in Physiology was awarded to Dr. John M. O'Keefe, Dr. May-Britt Moser and Dr. Edvard I. Moser for discovering particular neurons that constitute a positioning system in the brain. In this practice session, we are going to use machine learning approach to study the animal "GPS" system. In particular, we are going to use artificial neural networks to predict a rat's position based just on its hippocampal neural activity.
 
-At first we divide the experimental arena into 16 blocks and approach this as a classification problem. Next we make the task harder by trying to predict the rat's position (X and Y coordinates) directly, i.e. address this as a regression problem. Finally we automate the tedious task of hyperparameter optimization using Whetlab. 
+At first we divide the experimental arena where the rat moves into 16 blocks and approach this as a classification problem. Next we make the task harder by trying to predict the rat's position (X and Y coordinates) directly, i.e. address this as a regression problem. Finally we automate the tedious task of hyperparameter optimization using Whetlab. 
 
-The data we use is multi-neuron electrophysiological recordings from the Buzsaki lab in New York. The data has been preprocessed as number of spikes in 500ms time window.
+The data we use are spike recordings from hippocampus obtained in the G. Buzsaki lab (formerly in Rutgers University). The data has been preprocessed such that it reflects the number of spikes that each neuron fires in time window of 500 ms with interval of 50 ms.
 
 %
 % Installation
@@ -77,14 +77,14 @@ If you are new to Matlab/Octave, then these are excellent tutorials to start wit
 	\item \url{https://www.youtube.com/playlist?list=PLZ-E1VZLTeHMtUopmGx99KS775aHYP3e4}
 \end{itemize}
 
-Finally, for artificial neural networks we are going to use DeepLearnToolbox by Rasmus Berg Palm, which can be found from here: \url{https://github.com/rasmusbergpalm/DeepLearnToolbox}. It is also included with the tasks, so don't bother downloading it.
+Finally, for artificial neural networks we are going to use DeepLearnToolbox by Rasmus Berg Palm, which can be found from here: \url{https://github.com/rasmusbergpalm/DeepLearnToolbox}. It is also included with the code, so you do not have to download it.
 
 %
 % ANN
 %
 \section{Artificial Neural Networks}
 
-Tuning artificial neural networks can be frustrating experience. Many people have tried and given up before they start to get any useful results. In this practice session we hope to give you step-by-step guidelines on how to tune the learning parameters of neural network and how to squeeze out maximum performance from them. But beforehand we would like you to have a basic understanding how artificial neural networks work.
+Tuning artificial neural networks can be a frustrating experience. Many people have tried and given up before they start to get any useful results. In this practice session we hope to give you step-by-step guidelines on how to tune the learning parameters of a neural network and how to squeeze out maximum performance from them. But beforehand we would like you to have a basic understanding how artificial neural networks work.
 
 An artificial neural network consists of interconnected nodes, often called "neurons". Some of those nodes are input nodes -- they receive information from the outside world. Some of them are output nodes -- they provide the results of the calculation. Finally there are hidden nodes, which are just intermediate steps of computation.
 
@@ -94,7 +94,7 @@ An artificial neural network consists of interconnected nodes, often called "neu
 	\caption{Artificial neural network with one hidden layer.}
 \end{figure}
 
-Nodes of artificial neural network are organized into layers. There are no connections between nodes in the same layer, only between layers -- input layer nodes are connected to first hidden layer nodes, first hidden layer nodes are connected to the second hidden layer nodes and so on until last hidden layer nodes are connected to the output layer. In simplest neural networks, called feed-forward neural networks, the connections are in one direction only -- from input towards output.
+Nodes of artificial neural network are usually organized into layers. There are no connections between nodes in the same layer, only between layers -- input layer nodes are connected to first hidden layer nodes, first hidden layer nodes are connected to the second hidden layer nodes and so on until last hidden layer nodes are connected to the output layer. In simplest neural networks, called feed-forward neural networks, the connections are in one direction only -- from input towards output.
 
 While artificial neurons are inspired by their biological counterparts, they are just cartoonish simplifications of actual neurons. Typical artificial neuron just multiplies its inputs with respective weights, sums the results and applies an activation function. 
 
@@ -106,7 +106,7 @@ While artificial neurons are inspired by their biological counterparts, they are
 
 Common activation functions are $sigmoid$ (squashes any real value to between $0$ and $1$), $tanh$ (squashes any real value to between $-1$ and $1$) and $ReLU$ (rectified linear unit, $f(x)=max(x, 0)$). The purpose of activation functions is to add non-linearity into the calculations.
 
-\begin{figure}
+\begin{figure}[h]
         \centering
         \begin{subfigure}[b]{0.3\textwidth}
                 \includegraphics[width=\textwidth]{sigmoid.png}
@@ -136,38 +136,33 @@ Common activation functions are $sigmoid$ (squashes any real value to between $0
 %	\caption{Common activation functions.}
 %\end{figure}
 
-\newpage
+The beauty of artificial neural networks is that they can learn to map inputs to outputs, given enough examples. The learning is accomplished by changing weights between neurons. The universal approximation theorem states, that any continuous function can be approximated to a given precision using artificial neural network with just one hidden layer. In practice this result is irrelevant, because the claim that function can be represented by network does not say anything if this representation can be learned by the network. Still it is important to remember that artificial neural networks are nothing more than universal function approximators.
 
-The beauty of artificial neural networks is, that they can learn to map inputs to outputs, given enough examples. The learning is accomplished by changing weights between neurons. The universal approximation theorem states, that any function can be approximated to a given precision using artificial neural network with just one hidden layer. In practice this result is irrelevant, because the claim that function can be represented by network does not say anything if this representation can be learned by the network. Still it is important to remember that artificial neural networks are nothing more than universal function approximators.
+For learning we start first by defining a loss function, which measures how good the networks' current prediction is -- how well its outputs match the expected values. Small loss is good, big loss is bad. The most common loss function is mean squared error (MSE) -- you just square all differences between predicted and expected values, sum over all output nodes and average over the training batch. It is easy to see, that better predictions result in lower loss values with MSE. If outputs of your network are probabilities, then you would use a different loss function (cross-entropy loss), but the general idea stays the same.
 
-We start first by defining a loss function, which measures how good the networks' current prediction is -- how well its outputs match the expected values. Small loss is good, big loss is bad. The most common loss function is mean squared error (MSE) -- you just square all differences between predicted and expected values, sum over all output nodes and average over the training batch. It is easy to see, that better predictions result in lower loss values with MSE. If outputs of your network are probabilities, then you would use a different loss function (cross-entropy loss), but the general idea stays the same.
-
-To learn we would need to change the weights in a way, that decreases the loss function. The most common method to achieve that is called gradient descent. First we take partial derivatives of the loss function with respect to each weight. These derivatives -- the gradients -- give us an estimate of how much changing each particular weight would affect the loss function. To calculate those derivatives efficiently in an artificial neural network we use the backpropagation algorithm. This algorithm basically consists in applying the chain rule to find the derivatives of bottom layers from the derivatives of upper layers. Not wanting to go into details in here, let's just assume that somehow we know the gradients and thus how much we should add to or subtract from each weight to make the loss decrease.
+To learn we would need to change the weights in a way, that decreases the loss function. The most common method to achieve that is called gradient descent. First we take partial derivatives of the loss function with respect to each weight. These derivatives -- the gradients -- give us an estimate of how much changing each particular weight would affect the loss function. To calculate those derivatives efficiently in an artificial neural network we use the backpropagation algorithm. This algorithm basically consists in applying the chain rule to find the derivatives of bottom layers from the derivatives of upper layers. Not wanting to go into details in here, let us just assume that somehow we know the gradients and thus how much we should change each weight to make the loss decrease.
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=0.8\textwidth]{gradient_descent.png}
-	\caption{Gradient descent.}
+	\includegraphics[width=0.7\textwidth]{gradient_descent.png}
+	\caption{Loss function (here $J(\theta_1,\theta_2)$) defines a loss landscape over weight values (here only two -- $\theta_1$ and $\theta_2$). Gradient descent moves towards local minima taking steps towards steepest descent every time. There might be several local minimas gradient descent may end in.}
 	\label{gradient_descent}
-%
-% $J(\theta_1,\theta_2)$ is the loss function, $\theta_1$ and $\theta_2$ are the weights (suppose we have only two of them).
-%
 \end{figure}
 
 The complex nature of artificial neural networks means, that there might be more than one set of weight values for which the loss function has the minimal value. Moreover there are many local minimas, making it a non-convex optimization problem. Often the metaphore of "loss landscape" is used -- if you plotted loss value over many weight value combinations, then it would form a landscape of many hills and valleys. If you just followed the gradient (go downhill in the direction of the steepest descent), then it is easy to get stuck in a local minima (a shallow valley). People have come up with many techniques to work around this issue, but in principle it remains unresolved. Good news is that many of the local minimas are good enough and that there are plenty of them.
-
-\section{Preprocessing}
-
-TBD
-
-\newpage
 
 %
 % Classification
 %
 \section{Classification}
 
-In this exercise we divide the arena into 16 regions and try to predict the region where the rat is currently located in from the activity of 61 neurons in the hippocampal area of the brain.\\
+In this exercise we divide the arena into 16 regions and try to predict the region where the rat is currently located in from the activity of 71 neurons in the hippocampal area of the brain (CA1). Inputs to the network are spike counts of those neurons in 500 ms time window at 50 ms intervals. Ouputs of the network are 16 probabilities of regions.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.6\textwidth]{arena16.png}
+	\caption{The arena divided into 16 regions.}
+\end{figure}
 
 Start by running the code in \texttt{classification.m} and observing the results:
 
@@ -179,7 +174,7 @@ Start by running the code in \texttt{classification.m} and observing the results
 		\item The second figure shows the misclassification rate -- the fraction of training samples for which the predicted class was wrong. You can calculate accuracy by subtracting this number from 1. Again, error rates for both the training and validation set are shown.
 	\end{itemize}
 	Usually those two graphs are correlated, so it suffices to only pay attention to the latter. Also the validation set performance is more important than the training set performance.
-	\item After training is completed you should see the accuracy of neural network printed out. At first it might not be much better than the linear classifier.
+	\item After training is completed you should see the validation set accuracy of neural network printed out. At first it might not be much better than the linear classifier.
 	\item Finally the confusion matrix is shown. Confusion matrix summarizes the errors our classifier made -- which classes were mistaken for which other classes.
 \end{enumerate}
 
@@ -187,19 +182,19 @@ Start by running the code in \texttt{classification.m} and observing the results
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=0.66\textwidth]{training_loss.png}
+	\includegraphics[width=0.8\textwidth]{training_loss.png}
 	\caption{Example of network achieving 70\% accuracy.}
 \end{figure}
 
 \begin{enumerate}
-	\item First you should start by finding the optimal \textbf{learning rate}. Learning rate is the one most important learning parameter, it determines the step size on loss landscape. 
+	\item First you should start by finding the optimal \textbf{learning rate}, which is the multiplier for gradient. Learning rate is the most important learning parameter, it determines the step size on loss landscape. 
 	\begin{itemize}	
 		\item Too big learning rate -- you step over valleys and never go deep into them. 
-		\item Too small learning rate -- you end up in the closest valley however shallow it might be. 
+		\item Too small learning rate -- you end up in the closest valley, however shallow. 
 	\end{itemize}
-	Usually you try learning rate values in decreasing powers of 10, i.e. 1, 0.1, 0.01, 0.001 and so on. Repeat this until graphs are stable and the validation accuracy does not improve any more. Basically you want to use the highest learning rate, that does not blow up your loss.
-	\item Thereafter you might want to increase the \textbf{number of hidden nodes} to see if validation accuracy improves. More hidden nodes means the network can learn to approximate increasingly complicated functions. Traditionally we use powers of 2 as the number of hidden nodes, i.e. use twice as much hidden nodes as previously.
-	\item After that you should use \textbf{momentum} to speed up learning. Momentum adds inertia to weight updates -- at each update we do not just go towards the gradient, but also take in consideration the previous weight update. This results in a faster movement on long descents in one direction. Sometimes momentum may overshoot resulting in zig-zags on the graphs, but usually it helps to reach to minima faster. Usual values to try are 0.5, 0.9 and 0.95.
+	Usually you try learning rate values in decreasing powers of 10, i.e. 1, 0.1, 0.01, 0.001 and so on. Repeat this until graphs are stable and the validation set accuracy does not improve any more. Basically you want to use the highest learning rate, that does not blow up your loss.
+	\item Thereafter you might want to increase the \textbf{number of hidden nodes} to see if validation set accuracy improves. More hidden nodes means the network can learn to approximate increasingly complicated functions. Traditionally we use powers of 2 as the number of hidden nodes, i.e. use twice as much hidden nodes as previously.
+	\item After that you should use \textbf{momentum} to speed up learning. Momentum adds inertia to weight updates -- at each update we do not just go towards the gradient, but also take in consideration the previous weight update. This results in a faster movement on long descents in one direction. Sometimes momentum may overshoot resulting in zig-zags on the graphs, but still it helps to reach to minima faster. Usual values to try are 0.5, 0.9 and 0.95.
 	\item By now you should observe massive overfitting -- training set error is much smaller than validation set error. Basically network memorizes the training set and does not generalize to the validation set. There are several ways how to deal with overfitting:
 	\begin{description}
 		\item[Get more training data.] Data is the most effective regularizer, so if possible you should always use that option. However, in the reality it is rarely easy to get additional data. In such cases the following methods come to your aid.
@@ -218,7 +213,7 @@ Start by running the code in \texttt{classification.m} and observing the results
 
 	\item Once you think your learning parameters are good enough, you should try to learn longer -- increase the \textbf{number of epochs}. One epoch is a full training session over the entire training set. Usually the loss function plateaus at some point and there is no point in training any further. You should figure out where this point is by trying say 100 epochs. To save time in further finetuning we advise you to limit the number of epochs to when the plateau was reached.
 
-	\item As gradient descent explores the loss landscape, there might be gradually more fine-grained valleys to descend to. With initial learning rate you may just step over those valleys or step out of them once you are in. For that reason it is usually a good idea to decrease the learning rate once the loss function has plateaued. Most commonly we would do it in powers of 10, i.e. multiply learning rate by 0.1. However, instead of decreasing learning rate in big steps, the DeepLearnToolbox applies a scaling rate after each learning epoch. To achieve a multiplier of 0.1 after $n$ epochs you need to calculate the approximate per-epoch scaling rate by
+	\item As gradient descent explores the loss landscape, there might be gradually more fine-grained valleys to descend to. With initial learning rate you may just step over those valleys or step out of them once you are in. For that reason it is usually a good idea to decrease the learning rate once the loss function has plateaued. Most commonly we would multiply learning rate by 0.1. However, instead of decreasing learning rate in big steps after number of epochs, the DeepLearnToolbox applies a scaling rate after each learning epoch. To achieve a multiplier of 0.1 after $n$ epochs you need to calculate the approximate per-epoch scaling rate by
 
 $$
 scaling\_learningRate = \sqrt[n]{0.1}
@@ -241,7 +236,7 @@ For this task you should not invest too much effort into choosing:
 %
 \section{Regression}
 
-In this exercise we try to predict the rat's location directly. This time we are going to use activity of all 70 neurons as input. Outputs of the network are the X and Y coordinates of the rat.\\
+In this exercise we try to predict the rat's location directly. Inputs to the network are again spikes of 71 neurons. Outputs of the network are the X and Y coordinates of the rat.\\
 
 Start again by running the code in \texttt{regression.m} and observing the results:
 
@@ -259,7 +254,7 @@ Use all the tricks you learned from the previous exercise. As the dataset is big
 %
 % Whetlab
 %
-\section{Whetlab}
+\section*{Bonus: Whetlab}
 
 As you probably saw with previous exercises, choosing the right hyperparameters can be tedious task. One of the methods that can help in this situation is Bayesian optimization. This is a specialized technique for finding the maximum values of functions that are very challenging to evaluate, due to their being very expensive or noisy. Hyperparameter optimization is one of such difficult problems -- training a machine learning system can be time and energy-consuming taking hours or even days. But the applications of Bayesian optimisation are not limited to machine learning -- you could use it to suggest new settings for lab experiments or for tuning marketing tactics. Whetlab is a startup by top machine learning experts, that makes using Bayesian optimization especially easy to use. Unfortunately it works only in Matlab.\\
 
