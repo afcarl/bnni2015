@@ -16,6 +16,8 @@
 \usepackage{pdflscape}
 \usepackage{enumitem}
 \usepackage[normalem]{ulem}
+\usepackage{caption}
+\usepackage{subcaption}
 
 \usepackage{hyperref}
 \hypersetup{pdfborder={0 0 0 0}}
@@ -102,13 +104,37 @@ While artificial neurons are inspired by their biological counterparts, they are
 	\caption{Artificial neuron.}
 \end{figure}
 
-Common activation functions are $sigmoid(x)=\frac{1}{1 - e^{-x}}$ (squashes any real value to between $0$ and $1$), $tanh(x)=\frac{sinh(x)}{cosh(x)}$ (squashes any real value to between $-1$ and $1$) and $ReLU$ (rectified linear unit, $f(x)=max(x, 0)$). The purpose of activation functions is to add non-linearity into the calculations.
+Common activation functions are $sigmoid$ (squashes any real value to between $0$ and $1$), $tanh$ (squashes any real value to between $-1$ and $1$) and $ReLU$ (rectified linear unit, $f(x)=max(x, 0)$). The purpose of activation functions is to add non-linearity into the calculations.
 
-\begin{figure}[h]
-	\centering
-	\includegraphics[width=0.8\textwidth]{activation_functions.png}
-	\caption{Common activation functions.}
+\begin{figure}
+        \centering
+        \begin{subfigure}[b]{0.3\textwidth}
+                \includegraphics[width=\textwidth]{sigmoid.png}
+                \caption{Sigmoid function}
+                \label{fig:sigmoid}
+        \end{subfigure}
+        ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
+          %(or a blank line to force the subfigure onto a new line)
+        \begin{subfigure}[b]{0.3\textwidth}
+                \includegraphics[width=\textwidth]{tanh.png}
+                \caption{Tanh function}
+                \label{fig:tanh}
+        \end{subfigure}
+        ~ %add desired spacing between images, e. g. ~, \quad, \qquad, \hfill etc.
+          %(or a blank line to force the subfigure onto a new line)
+        \begin{subfigure}[b]{0.3\textwidth}
+                \includegraphics[width=\textwidth]{relu.png}
+                \caption{Rectified linear unit}
+                \label{fig:relu}
+        \end{subfigure}
+        \caption{Common activation functions}\label{fig:activation_functions}
 \end{figure}
+
+%\begin{figure}[h]
+%	\centering
+%	\includegraphics[width=0.8\textwidth]{activation_functions.png}
+%	\caption{Common activation functions.}
+%\end{figure}
 
 \newpage
 
