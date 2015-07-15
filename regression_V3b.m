@@ -40,7 +40,7 @@ params = [ ...
     0.9 1; ...          % learning rate scaling
     0 0.5; ...          % dropout
     -5 -3; ...          % weight decay in log10 scale
-    8 12; ...           % nr of hidden nodes in log2 scale
+    8 11; ...           % nr of hidden nodes in log2 scale
     1 3;                % nr of hidden layers
 ];
 
