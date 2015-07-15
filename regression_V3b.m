@@ -6,7 +6,8 @@ addpath('utils', genpath('DeepLearnToolbox'), genpath('bayesopt'));
 more off;
 
 % load data
-load('data/TheMatrixV2.mat');
+load('data/TheMatrixV3.mat');
+features = features{1,2};
 
 % calculate sizes of training and validation set
 nr_samples = size(features, 1);
@@ -34,7 +35,7 @@ F = @(params) regression_fit(train_x, train_y, val_x, val_y, params);
 
 % parameters for bayesopt
 params = [ ...
-    -5  -1; ...         % learning rate in log10 scale
+    -5  -3; ...         % learning rate in log10 scale
     0.5 1; ...          % momentum
     0.9 1; ...          % learning rate scaling
     0 0.5; ...          % dropout
@@ -50,7 +51,7 @@ opt.maxes = params(:,2)';
 opt.maxiters = 25;
 opt.save_trace = 1;
 opt.resume_trace = 1;
-opt.trace_file = 'ratgps.mat';
+opt.trace_file = 'ratgpsV3b.mat';
 %opt.parallel_jobs = 2;
 %parpool('local', 2);
 [ min_sample, min_value, botrace ] = bayesopt(F, opt)

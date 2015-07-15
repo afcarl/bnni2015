@@ -1,16 +1,19 @@
 function mean_dist = regression_fit(train_x, train_y, val_x, val_y, params)
   nr_inputs = size(train_x, 2);
   nr_outputs = size(train_y, 2);
+  nr_hiddens = 2^round(params(6));
+  nr_layers = round(params(7));
+  hidden_layers = repmat([nr_hiddens], 1, nr_layers);
 
   % initialize neural network
   rand('state',0)                 % use fixed random seed to make results comparable
-  nn = nnsetup([nr_inputs 1000 1000 nr_outputs]);      % number of nodes in layers - input, hidden, output
-  nn.learningRate = params(1);        % multiply gradient by this when changing weights
+  nn = nnsetup([nr_inputs hidden_layers nr_outputs]);      % number of nodes in layers - input, hidden, output
+  nn.learningRate = 10^params(1);        % multiply gradient by this when changing weights
   nn.momentum = params(2);              % inertia - add this much of previous weight change
   nn.scaling_learningRate = params(3); % multiply learning rate by this after each epoch
-  %nn.activation_function = 'tanh_opt';   % activation function: tanh_opt, sigm or relu
+  nn.activation_function = 'relu';   % activation function: tanh_opt, sigm or relu
   nn.dropoutFraction = params(4);     % disable this much hidden nodes during each iteration
-  nn.weightPenaltyL2 = params(5);     % penalize big weights by subtracting 
+  nn.weightPenaltyL2 = 10^params(5);     % penalize big weights by subtracting 
                                   % fraction of weights at each training iteration
   nn.output = 'linear';           % use linear output for regression
   opts.numepochs = 40;            % number of full sweeps through data
