@@ -11,7 +11,7 @@ function mean_dist = regression_fit(train_x, train_y, val_x, val_y, params)
   nn.learningRate = 10^params(1);        % multiply gradient by this when changing weights
   nn.momentum = params(2);              % inertia - add this much of previous weight change
   nn.scaling_learningRate = params(3); % multiply learning rate by this after each epoch
-  nn.activation_function = 'relu';   % activation function: tanh_opt, sigm or relu
+  nn.activation_function = 'tanh_opt';   % activation function: tanh_opt, sigm or relu
   nn.dropoutFraction = params(4);     % disable this much hidden nodes during each iteration
   nn.weightPenaltyL2 = 10^params(5);     % penalize big weights by subtracting 
                                   % fraction of weights at each training iteration
