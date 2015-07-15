@@ -34,11 +34,11 @@ F = @(params) regression_fit(train_x, train_y, val_x, val_y, params);
 
 % parameters for bayesopt
 params = [ ...
-    -5  -3; ...         % learning rate in log10 scale
+    -5 -3; ...         % learning rate in log10 scale
     0.5 1; ...          % momentum
     0.9 1; ...          % learning rate scaling
     0 0.5; ...          % dropout
-    -5 -2; ...          % weight decay in log10 scale
+    -5 -3; ...          % weight decay in log10 scale
     8 12; ...           % nr of hidden nodes in log2 scale
     1 3;                % nr of hidden layers
 ];
