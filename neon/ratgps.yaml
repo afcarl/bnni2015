@@ -4,6 +4,8 @@
     inputs_name: 'features',
     targets_name: 'position',
     train_size: 40000,
+    #test_size: 0.2,
+    shuffle: False,
   },
 
   metrics: {
