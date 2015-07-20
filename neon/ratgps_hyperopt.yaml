@@ -3,7 +3,10 @@
     data_file: '/home/tambet/ratgps/data/TheMatrixV2.mat',
     inputs_name: 'features',
     targets_name: 'position',
-    train_size: 40000,
+    # 50% for training, 20% for validation, 30% leave out for testing
+    train_size: 0.5,
+    test_size: 0.2,
+    shuffle: False,
   },
 
   metrics: {
@@ -31,7 +34,7 @@
         learning_rate: !hyperopt lr FLOAT 0.0001 0.001,
         schedule: {
           type: step,
-          step_epochs: !hyperopt lr_step INT 1 20,
+          step_epochs: !hyperopt lr_step INT 10 20,
           ratio: !hyperopt lr_schedule FLOAT 0.1 1,
         },
         momentum_params: {
@@ -72,28 +75,28 @@
         name: do2,
         keep: *dropout,
       },
-      !obj:layers.FCLayer {
-        name: fc3,
-        nout: *hidden_nodes,
-        lrule_init: *lr_init,
-        weight_init: *wt_init,
-        activation: !obj:transforms.TanhOpt {},
-      },
-      !obj:layers.DropOutLayer {
-        name: do3,
-        keep: *dropout,
-      },
-      !obj:layers.FCLayer {
-        name: fc4,
-        nout: *hidden_nodes,
-        lrule_init: *lr_init,
-        weight_init: *wt_init,
-        activation: !obj:transforms.TanhOpt {},
-      },
-      !obj:layers.DropOutLayer {
-        name: do4,
-        keep: *dropout,
-      },
+#      !obj:layers.FCLayer {
+#        name: fc3,
+#        nout: *hidden_nodes,
+#        lrule_init: *lr_init,
+#        weight_init: *wt_init,
+#        activation: !obj:transforms.TanhOpt {},
+#      },
+#      !obj:layers.DropOutLayer {
+#        name: do3,
+#        keep: *dropout,
+#      },
+#      !obj:layers.FCLayer {
+#        name: fc4,
+#        nout: *hidden_nodes,
+#        lrule_init: *lr_init,
+#        weight_init: *wt_init,
+#        activation: !obj:transforms.TanhOpt {},
+#      },
+#      !obj:layers.DropOutLayer {
+#        name: do4,
+#        keep: *dropout,
+#      },
       !obj:layers.FCLayer {
         name: output,
         nout: 1,

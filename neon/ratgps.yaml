@@ -3,8 +3,8 @@
     data_file: '../data/TheMatrixV2.mat',
     inputs_name: 'features',
     targets_name: 'position',
-    train_size: 40000,
-    #test_size: 0.2,
+    # 70% for training (together with validation set), 30% for testing
+    train_size: 0.7,
     shuffle: False,
   },
 
@@ -74,28 +74,28 @@
         name: do2,
         keep: *dropout,
       },
-      !obj:layers.FCLayer {
-        name: fc3,
-        nout: *hidden_nodes,
-        lrule_init: *lr_init,
-        weight_init: *wt_init,
-        activation: !obj:transforms.TanhOpt {},
-      },
-      !obj:layers.DropOutLayer {
-        name: do3,
-        keep: *dropout,
-      },
-      !obj:layers.FCLayer {
-        name: fc4,
-        nout: *hidden_nodes,
-        lrule_init: *lr_init,
-        weight_init: *wt_init,
-        activation: !obj:transforms.TanhOpt {},
-      },
-      !obj:layers.DropOutLayer {
-        name: do4,
-        keep: *dropout,
-      },
+#      !obj:layers.FCLayer {
+#        name: fc3,
+#        nout: *hidden_nodes,
+#        lrule_init: *lr_init,
+#        weight_init: *wt_init,
+#        activation: !obj:transforms.TanhOpt {},
+#      },
+#      !obj:layers.DropOutLayer {
+#        name: do3,
+#        keep: *dropout,
+#      },
+#      !obj:layers.FCLayer {
+#        name: fc4,
+#        nout: *hidden_nodes,
+#        lrule_init: *lr_init,
+#        weight_init: *wt_init,
+#        activation: !obj:transforms.TanhOpt {},
+#      },
+#      !obj:layers.DropOutLayer {
+#        name: do4,
+#        keep: *dropout,
+#      },
       !obj:layers.FCLayer {
         name: output,
         nout: 1,
