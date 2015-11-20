@@ -1,0 +1,124 @@
+!obj:experiments.FitPredictErrorExperiment {
+  dataset: !obj:datasets.Matlab {
+    data_file: '../data/TheMatrixV2.mat',
+    inputs_name: 'features',
+    targets_name: 'position',
+    # 70% for training (together with validation set), 30% for testing
+    train_size: 0.7,
+    shuffle: False,
+  },
+
+  metrics: {
+    train: [
+      !obj:metrics.MAE {},
+    ],
+    test: [
+      !obj:metrics.MAE {},
+    ],
+  },
+
+  weight_init: &wt_init !obj:params.NodeNormalizedValGen {},
+
+  lrule: &ada {
+      type: adadelta,
+      lr_params: {
+        rho: 0.99,
+        epsilon: 0.0000001,
+      },
+    },
+  
+  lrule: &lr_init {
+      type: gradient_descent_momentum,
+      lr_params: {
+        learning_rate: 0.00014, #hyperopt lr FLOAT 0.000001 0.00001,
+        schedule: {
+          type: step,
+          step_epochs: 20,
+          ratio: 0.66,
+        },
+        momentum_params: {
+          type: constant,
+          coef: 0.78, #hyperopt momentum FLOAT 0.5 0.99,
+        },
+      },
+    },
+
+  model: !obj:models.MLP {
+    num_epochs: 100,
+    batch_size: 100,
+    #serialized_path: '~/data/ratgps/ratgps-model.prm',
+    layers: [
+      !obj:layers.DataLayer {
+        name: d0,
+        nout: 224,
+      },
+      !obj:layers.FCLayer {
+        name: fc1,
+        nout: &hidden_nodes 1024, #hyperopt nodes INT 1000 2000,
+        lrule_init: *lr_init,
+        weight_init: *wt_init,
+        activation: !obj:transforms.TanhOpt {},
+      },
+      !obj:layers.DropOutLayer {
+        name: do1,
+        keep: &dropout 0.98, #hyperopt dropout FLOAT 0.5 1,
+      },
+      !obj:layers.FCLayer {
+        name: fc2,
+        nout: *hidden_nodes,
+        lrule_init: *lr_init,
+        weight_init: *wt_init,
+        activation: !obj:transforms.TanhOpt {},
+      },
+      !obj:layers.DropOutLayer {
+        name: do2,
+        keep: *dropout,
+      },
+#      !obj:layers.FCLayer {
+#        name: fc3,
+#        nout: *hidden_nodes,
+#        lrule_init: *lr_init,
+#        weight_init: *wt_init,
+#        activation: !obj:transforms.TanhOpt {},
+#      },
+#      !obj:layers.DropOutLayer {
+#        name: do3,
+#        keep: *dropout,
+#      },
+#      !obj:layers.FCLayer {
+#        name: fc4,
+#        nout: *hidden_nodes,
+#        lrule_init: *lr_init,
+#        weight_init: *wt_init,
+#        activation: !obj:transforms.TanhOpt {},
+#      },
+#      !obj:layers.DropOutLayer {
+#        name: do4,
+#        keep: *dropout,
+#      },
+      !obj:layers.FCLayer {
+        name: output,
+        nout: 1,
+        lrule_init: *lr_init,
+        weight_init: *wt_init,
+      },
+      !obj:layers.CostLayer {
+        name: cost,
+        cost: !obj:transforms.SumSquaredDiffs {},
+      },
+    ],
+  },
+
+  # logging options that are passed to logging.basicConfig
+  # level value thresholds (set level lower to display them):
+  #   CRITICAL 50
+  #   ERROR    40
+  #   WARNING  30
+  #   INFO     20
+  #   DEBUG    10
+  #   NOTSET    0
+  logging: {
+    level: 20,
+    format: '%(asctime)-15s %(levelname)s:%(module)s - %(message)s'
+  },
+}
