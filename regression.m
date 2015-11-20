@@ -6,18 +6,21 @@ addpath('utils', genpath('DeepLearnToolbox'));
 more off;
 
 % load data
-load('data/data_500.mat');
+load('data/TestMatrix40ms3win0.5slide10speed.mat');
+spikes = features;
+coords = position;
 
 % calculate sizes of training and validation set
 nr_samples = size(spikes, 1);
-nr_train = 100000;              % must be divisible by batch size
+nr_train = round(nr_samples * 0.8, -2);              % must be divisible by batch size
 nr_val = nr_samples - nr_train;
+nr_neurons = size(spikes, 2);
+nr_coords = size(coords, 2);
 
 % randomly split samples into training and validation set,
 % because our samples are not evenly distributed
-perm = randperm(nr_samples);
-train_idx = perm(1:nr_train);
-val_idx = perm((nr_train + 1):(nr_train + nr_val));
+train_idx = randperm(nr_train);
+val_idx = nr_train + randperm(nr_val);
 
 train_x = spikes(train_idx, :);
 train_y = coords(train_idx, :);
@@ -54,12 +57,12 @@ val_x = normalize(val_x, mu, sigma);
 
 % initialize neural network
 rand('state',0)                 % use fixed random seed to make results comparable
-nn = nnsetup([71 1024 2]);      % number of nodes in layers - input, hidden, output
+nn = nnsetup([nr_neurons 1024 1024 nr_coords]);      % number of nodes in layers - input, hidden, output
 nn.learningRate = 0.001;        % multiply gradient by this when changing weights
 nn.momentum = 0.9;              % inertia - add this much of previous weight change
 nn.scaling_learningRate = 0.99; % multiply learning rate by this after each epoch
 %nn.activation_function = 'tanh_opt';   % activation function: tanh_opt, sigm or relu
-%nn.dropoutFraction = 0.05;     % disable this much hidden nodes during each iteration
+nn.dropoutFraction = 0.1;     % disable this much hidden nodes during each iteration
 %nn.weightPenaltyL2 = 1e-4;     % penalize big weights by subtracting 
                                 % fraction of weights at each training iteration
 nn.output = 'linear';           % use linear output for regression

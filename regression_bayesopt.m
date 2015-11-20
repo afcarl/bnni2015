@@ -8,14 +8,13 @@ function [min_sample, min_value, botrace] = regression_bayesopt(datafile, tracef
 
   % calculate sizes of training and validation set
   nr_samples = size(features, 1);
-  nr_train = 40000;              % must be divisible by batch size
+  nr_train = round(nr_samples * 0.8, -2); % must be divisible by batch size
   nr_val = nr_samples - nr_train;
 
   % randomly split samples into training and validation set,
   % because our samples are not evenly distributed
-  perm = randperm(nr_samples);
-  train_idx = perm(1:nr_train);
-  val_idx = perm((nr_train + 1):(nr_train + nr_val));
+  train_idx = randperm(nr_train);
+  val_idx = nr_train + randperm(nr_val);
 
   train_x = features(train_idx, :);
   train_y = position(train_idx, :);
@@ -32,7 +31,7 @@ function [min_sample, min_value, botrace] = regression_bayesopt(datafile, tracef
 
   % parameters for bayesopt
   params = [ ...
-      -5  -3; ...         % learning rate in log10 scale
+      -5 -3; ...          % learning rate in log10 scale
       0.5 1; ...          % momentum
       0.9 1; ...          % learning rate scaling
       0 0.5; ...          % dropout

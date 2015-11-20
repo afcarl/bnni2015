@@ -2,3 +2,5 @@
 /text/*.aux
 /text/*.out
 /text/*.gz
+/backup
+/baseline/.ipynb_checkpoints

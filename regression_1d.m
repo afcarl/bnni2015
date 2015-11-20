@@ -50,13 +50,13 @@ nr_outputs = size(train_y, 2);
 
 % initialize neural network
 rand('state',0)                 % use fixed random seed to make results comparable
-nn = nnsetup([nr_inputs 2048 2048 2048 nr_outputs]); % number of nodes in layers - input, hidden, output
-nn.learningRate = 8.4338e-04;   % multiply gradient by this when changing weights
-nn.momentum = 0.7462;           % inertia - add this much of previous weight change
-nn.scaling_learningRate = 0.9541;   % multiply learning rate by this after each epoch
+nn = nnsetup([nr_inputs 1024 1024 1024 1024 1024 nr_outputs]); % number of nodes in layers - input, hidden, output
+nn.learningRate = 0.001;        % multiply gradient by this when changing weights
+nn.momentum = 0.75;             % inertia - add this much of previous weight change
+nn.scaling_learningRate = 0.95; % multiply learning rate by this after each epoch
 nn.activation_function = 'tanh_opt';   % activation function: tanh_opt, sigm or relu
-nn.dropoutFraction = 0.0899;    % disable this much hidden nodes during each iteration
-nn.weightPenaltyL2 = 4.5751e-04;% penalize big weights by subtracting 
+nn.dropoutFraction = 0.1;       % disable this much hidden nodes during each iteration
+%nn.weightPenaltyL2 = 0;         % penalize big weights by subtracting 
                                 % fraction of weights at each training iteration
 nn.output = 'linear';           % use linear output for regression
 opts.numepochs = 40;            % number of full sweeps through data
