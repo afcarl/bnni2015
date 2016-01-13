@@ -18,14 +18,22 @@ def load_data(features, locations):
   if features.endswith(".mat"):
     X = loadmat(features)
     X = X['mm'].T
-  else:
+  elif features.endswith(".dat"):
     X = np.loadtxt(features)
+  elif features.endswith(".npy"):
+    X = np.load(features)
+  else:
+    assert False, "Unknown feature file format"
 
   if locations.endswith(".mat"):
     y = loadmat(locations)
     y = y['loc'] / 3.5
-  else:
+  elif locations.endswith(".dat"):
     y = np.loadtxt(locations) / 3.5
+  elif locations.endswith(".npy"):
+    y = np.load(locations)
+  else:
+    assert False, "Unknown location file format"
 
   print "Original data: ", X.shape, y.shape, np.min(X), np.max(X), np.min(y), np.max(y)
   assert X.shape[0] == y.shape[0], "Number of samples in features and locations does not match"
@@ -72,22 +80,18 @@ def create_model(nb_inputs, nb_outputs, args):
   print "Creating model..."
   model = Graph()
   model.add_input(name='input', batch_input_shape=(args.batch_size, args.seqlen, nb_inputs))
-  model.add_node(LSTM(args.hidden_nodes, return_sequences=True, stateful=args.stateful), name='forward', input='input')
-  model.add_node(LSTM(args.hidden_nodes, return_sequences=True, stateful=args.stateful, go_backwards=True), name='backward', input='input')
-  model.add_node(Dropout(0.5), name='dropout', inputs=['forward', 'backward'])
-  model.add_node(TimeDistributedDense(nb_outputs), name='dense', input='dropout')
+  for i in xrange(args.layers):
+    model.add_node(LSTM(args.hidden_nodes, return_sequences=True, stateful=args.stateful), name='forward', input='input')
+    model.add_node(LSTM(args.hidden_nodes, return_sequences=True, stateful=args.stateful, go_backwards=True), name='backward', input='input')
+    if args.dropout > 0:
+      model.add_node(Dropout(args.dropout), name='dropout', inputs=['forward', 'backward'])
+      model.add_node(TimeDistributedDense(nb_outputs), name='dense', input='dropout')
+    else:
+      model.add_node(TimeDistributedDense(nb_outputs), name='dense', inputs=['forward', 'backward'])
   model.add_output(name='output', input='dense')
-  '''
-  model = Sequential()
-  model.add(LSTM(args.hidden_nodes, return_sequences=True, batch_input_shape=(args.batch_size, args.seqlen, nb_inputs), stateful=args.stateful))
-  #model.add(Dropout(0.2))
-  #model.add(LSTM(512, return_sequences=True))
-  #model.add(Dropout(0.2))
-  model.add(TimeDistributedDense(nb_outputs))
-  '''  
+
   print "Compiling model..."
-  #model.compile(loss='mean_squared_error', optimizer='adam')
-  model.compile('adam', {'output': 'mean_squared_error'})
+  model.compile(args.optimizer, {'output': 'mean_squared_error'})
   return model
 
 def fit_data(model, train_X, train_y, valid_X, valid_y, save_path, args):
@@ -102,7 +106,8 @@ def fit_data(model, train_X, train_y, valid_X, valid_y, save_path, args):
 
   model.fit({'input': train_X, 'output': train_y}, batch_size=args.batch_size, nb_epoch=args.epochs, 
       validation_data={'input': valid_X, 'output': valid_y}, 
-      shuffle=False if args.stateful else 'batch', verbose=args.verbose, callbacks=callbacks)
+      shuffle=args.shuffle if args.shuffle=='batch' else True if args.shuffle=='true' else False,
+      verbose=args.verbose, callbacks=callbacks)
 
   return model
 
@@ -123,7 +128,7 @@ def eval_data(model, train_X, train_y, valid_X, valid_y, load_path, args):
   print 'train dist = %g, validation dist = %g' % (terr, verr)
   return (terr, verr)
 
-if __name__ == '__main__':
+def create_parser():
   parser = argparse.ArgumentParser()
   parser.add_argument("save_path")
   parser.add_argument("--features", default="London_data_2x1000Center_bin100.dat")
@@ -135,7 +140,16 @@ if __name__ == '__main__':
   parser.add_argument("--epochs", type=int, default=100)
   parser.add_argument("--patience", type=int, default=5)
   parser.add_argument("--stateful", action="store_true", default=False)
+  parser.add_argument("--backwards", action="store_true", default=False)
   parser.add_argument("--verbose", type=int, choices=[0, 1, 2], default=1)
+  parser.add_argument("--shuffle", choices=['batch', 'true', 'false'], default='true')
+  parser.add_argument("--dropout", type=float, default=0)
+  parser.add_argument("--layers", type=int, choices=[1, 2, 3], default=1)
+  parser.add_argument("--optimizer", choices=['adam', 'rmsprop'], default='rmsprop')
+  return parser
+
+if __name__ == '__main__':
+  parser = create_parser()
   args = parser.parse_args()
 
   assert not args.stateful or args.batch_size == 1, "Stateful doesn't work with batch size > 1"

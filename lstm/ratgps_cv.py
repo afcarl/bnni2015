@@ -24,18 +24,7 @@ def cvfit(model, X, y, k, save_path, args):
   return tuple(np.mean(results, axis=0))
 
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser()
-  parser.add_argument("save_path")
-  parser.add_argument("--features", default="London_data_2x1000Center_bin100.dat")
-  parser.add_argument("--locations", default="London_data_2x1000Center_bin100_pos.dat")
-  parser.add_argument("--train_set", type=float, default=0.8)
-  parser.add_argument("--seqlen", type=int, default=100)
-  parser.add_argument("--hidden_nodes", type=int, default=512)
-  parser.add_argument("--batch_size", type=int, default=1)
-  parser.add_argument("--epochs", type=int, default=100)
-  parser.add_argument("--patience", type=int, default=5)
-  parser.add_argument("--stateful", action="store_true", default=False)
-  parser.add_argument("--verbose", choices=['0', '1', '2'], default=1)
+  parser = create_parser()
   parser.add_argument("--cvfolds", type=int, default=2)
   args = parser.parse_args()
 

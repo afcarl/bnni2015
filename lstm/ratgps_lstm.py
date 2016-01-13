@@ -126,7 +126,7 @@ def eval_data(model, train_X, train_y, valid_X, valid_y, load_path, args):
   print 'train dist = %g, validation dist = %g' % (terr, verr)
   return (terr, verr)
 
-if __name__ == '__main__':
+def create_parser():
   parser = argparse.ArgumentParser()
   parser.add_argument("save_path")
   parser.add_argument("--features", default="London_data_2x1000Center_bin100.dat")
@@ -143,7 +143,11 @@ if __name__ == '__main__':
   parser.add_argument("--shuffle", choices=['batch', 'true', 'false'], default='true')
   parser.add_argument("--dropout", type=float, default=0)
   parser.add_argument("--layers", type=int, choices=[1, 2, 3], default=1)
-  parser.add_argument("--optimizer", choices=['adam', 'rmsprop'], default='adam')
+  parser.add_argument("--optimizer", choices=['adam', 'rmsprop'], default='rmsprop')
+  return parser
+
+if __name__ == '__main__':
+  parser = create_parser()
   args = parser.parse_args()
 
   assert not args.stateful or args.batch_size == 1, "Stateful doesn't work with batch size > 1"
