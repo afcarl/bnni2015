@@ -135,8 +135,7 @@ if __name__ == '__main__':
   parser.add_argument("--epochs", type=int, default=100)
   parser.add_argument("--patience", type=int, default=5)
   parser.add_argument("--stateful", action="store_true", default=False)
-  parser.add_argument("--verbose", choices=[0, 1, 2], default=1)
-  parser.add_argument("--folds", type=int, default=2)
+  parser.add_argument("--verbose", type=int, choices=[0, 1, 2], default=1)
   args = parser.parse_args()
 
   assert not args.stateful or args.batch_size == 1, "Stateful doesn't work with batch size > 1"

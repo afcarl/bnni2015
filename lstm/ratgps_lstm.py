@@ -18,14 +18,22 @@ def load_data(features, locations):
   if features.endswith(".mat"):
     X = loadmat(features)
     X = X['mm'].T
-  else:
+  elif features.endswith(".dat"):
     X = np.loadtxt(features)
+  elif features.endswith(".npy"):
+    X = np.load(features)
+  else:
+    assert False, "Unknown feature file format"
 
   if locations.endswith(".mat"):
     y = loadmat(locations)
     y = y['loc'] / 3.5
-  else:
+  elif locations.endswith(".dat"):
     y = np.loadtxt(locations) / 3.5
+  elif locations.endswith(".npy"):
+    y = np.load(locations)
+  else:
+    assert False, "Unknown location file format"
 
   print "Original data: ", X.shape, y.shape, np.min(X), np.max(X), np.min(y), np.max(y)
   assert X.shape[0] == y.shape[0], "Number of samples in features and locations does not match"
@@ -71,14 +79,18 @@ def split_data(X, y, args):
 def create_model(nb_inputs, nb_outputs, args):
   print "Creating model..."
   model = Sequential()
-  model.add(LSTM(args.hidden_nodes, return_sequences=True, batch_input_shape=(args.batch_size, args.seqlen, nb_inputs), stateful=args.stateful))
-  #model.add(Dropout(0.2))
-  #model.add(LSTM(512, return_sequences=True))
-  #model.add(Dropout(0.2))
+  
+  for i in xrange(args.layers):
+    layer = LSTM(args.hidden_nodes, return_sequences=True, stateful=args.stateful, go_backwards=args.backwards)
+    if i == 0:
+      layer.set_input_shape((args.batch_size, args.seqlen, nb_inputs))
+    model.add(layer)
+    if args.dropout > 0:
+      model.add(Dropout(args.dropout))
   model.add(TimeDistributedDense(nb_outputs))
   
   print "Compiling model..."
-  model.compile(loss='mean_squared_error', optimizer='adam')
+  model.compile(loss='mean_squared_error', optimizer=args.optimizer)
   return model
 
 def fit_data(model, train_X, train_y, valid_X, valid_y, save_path, args):
@@ -92,7 +104,8 @@ def fit_data(model, train_X, train_y, valid_X, valid_y, save_path, args):
     callbacks.append(StateReset())
 
   model.fit(train_X, train_y, batch_size=args.batch_size, nb_epoch=args.epochs, validation_data=(valid_X, valid_y), 
-      shuffle=False if args.stateful else 'batch', verbose=args.verbose, callbacks=callbacks)
+      shuffle=args.shuffle if args.shuffle=='batch' else True if args.shuffle=='true' else False, 
+      verbose=args.verbose, callbacks=callbacks)
 
   return model
 
@@ -125,8 +138,12 @@ if __name__ == '__main__':
   parser.add_argument("--epochs", type=int, default=100)
   parser.add_argument("--patience", type=int, default=5)
   parser.add_argument("--stateful", action="store_true", default=False)
-  parser.add_argument("--verbose", choices=[0, 1, 2], default=1)
-  parser.add_argument("--folds", type=int, default=2)
+  parser.add_argument("--backwards", action="store_true", default=False)
+  parser.add_argument("--verbose", type=int, choices=[0, 1, 2], default=1)
+  parser.add_argument("--shuffle", choices=['batch', 'true', 'false'], default='true')
+  parser.add_argument("--dropout", type=float, default=0)
+  parser.add_argument("--layers", type=int, choices=[1, 2, 3], default=1)
+  parser.add_argument("--optimizer", choices=['adam', 'rmsprop'], default='adam')
   args = parser.parse_args()
 
   assert not args.stateful or args.batch_size == 1, "Stateful doesn't work with batch size > 1"
