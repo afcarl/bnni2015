@@ -39,10 +39,10 @@ def load_data(features, locations):
   assert X.shape[0] == y.shape[0], "Number of samples in features and locations does not match"
   return (X, y)
 
-def reshape_data(X, y, args):
+def reshape_data(X, y, seqlen):
   assert X.shape[0] == y.shape[0]
   nsamples = X.shape[0]
-  nsamples = int(nsamples / args.seqlen) * args.seqlen
+  nsamples = int(nsamples / seqlen) * seqlen
 
   # truncate remaining samples, if not divisible by sequence length
   X = X[:nsamples]
@@ -51,21 +51,21 @@ def reshape_data(X, y, args):
   nb_inputs = X.shape[1]
   nb_outputs = y.shape[1]
 
-  X = np.reshape(X, (-1, args.seqlen, nb_inputs))
-  y = np.reshape(y, (-1, args.seqlen, nb_outputs))
+  X = np.reshape(X, (-1, seqlen, nb_inputs))
+  y = np.reshape(y, (-1, seqlen, nb_outputs))
 
   print "After reshaping: ", X.shape, y.shape
   return (X, y)
 
-def split_data(X, y, args):
+def split_data(X, y, train_set):
   assert X.shape[0] == y.shape[0]
   nsamples = X.shape[0]
 
-  if 0 <= args.train_set <= 1:
-    ntrain = int(nsamples * args.train_set)
+  if 0 <= train_set <= 1:
+    ntrain = int(nsamples * train_set)
     nvalid = nsamples - ntrain
   else:
-    ntrain = int(args.train_set)
+    ntrain = int(train_set)
     nvalid = nsamples - ntrain
 
   train_X = X[:ntrain]
@@ -81,14 +81,25 @@ def create_model(nb_inputs, nb_outputs, args):
   model = Graph()
   model.add_input(name='input', batch_input_shape=(args.batch_size, args.seqlen, nb_inputs))
   for i in xrange(args.layers):
-    model.add_node(LSTM(args.hidden_nodes, return_sequences=True, stateful=args.stateful), name='forward', input='input')
-    model.add_node(LSTM(args.hidden_nodes, return_sequences=True, stateful=args.stateful, go_backwards=True), name='backward', input='input')
+    model.add_node(LSTM(args.hidden_nodes, return_sequences=True, stateful=args.stateful), name='forward'+str(i+1), 
+        input='input' if i == 0 else 'dropout'+str(i) if args.dropout > 0 else None, 
+        inputs=['forward'+str(i), 'backward'+str(i)] if i > 0 and args.dropout == 0 else [])
+    print "name=", 'forward'+str(i+1), "input=", 'input' if i == 0 else 'dropout'+str(i) if args.dropout > 0 else None, "inputs=", ['forward'+str(i), 'backward'+str(i)] if i > 0 and args.dropout == 0 else []
+    model.add_node(LSTM(args.hidden_nodes, return_sequences=True, stateful=args.stateful, go_backwards=True), name='backward'+str(i+1), 
+        input='input' if i == 0 else 'dropout'+str(i) if args.dropout > 0 else None, 
+        inputs=['forward'+str(i), 'backward'+str(i)] if i > 0 and args.dropout == 0 else [])
+    print "name=", 'backward'+str(i+1), "input=", 'input' if i == 0 else 'dropout'+str(i) if args.dropout > 0 else None, "inputs=", ['forward'+str(i), 'backward'+str(i)] if i > 0 and args.dropout == 0 else []
     if args.dropout > 0:
-      model.add_node(Dropout(args.dropout), name='dropout', inputs=['forward', 'backward'])
-      model.add_node(TimeDistributedDense(nb_outputs), name='dense', input='dropout')
-    else:
-      model.add_node(TimeDistributedDense(nb_outputs), name='dense', inputs=['forward', 'backward'])
+      model.add_node(Dropout(args.dropout), name='dropout'+str(i+1), inputs=['forward'+str(i+1), 'backward'+str(i+1)])
+      print "name=", 'dropout'+str(i+1), "inputs=", ['forward'+str(i+1), 'backward'+str(i+1)]
+
+  model.add_node(TimeDistributedDense(nb_outputs), name='dense', 
+      input='dropout'+str(args.layers) if args.dropout > 0 else None,
+      inputs=['forward'+str(args.layers), 'backward'+str(args.layers)] if args.dropout == 0 else [])
+  print "name=", 'dense', "input=", 'dropout'+str(args.layers) if args.dropout > 0 else None, "inputs=", ['forward'+str(args.layers), 'backward'+str(args.layers)] if args.dropout == 0 else []
   model.add_output(name='output', input='dense')
+  print "name=", 'output', "input=", 'dense'
+  model.summary()
 
   print "Compiling model..."
   model.compile(args.optimizer, {'output': 'mean_squared_error'})
@@ -135,15 +146,15 @@ def create_parser():
   parser.add_argument("--locations", default="London_data_2x1000Center_bin100_pos.dat")
   parser.add_argument("--train_set", type=float, default=0.8)
   parser.add_argument("--seqlen", type=int, default=100)
-  parser.add_argument("--hidden_nodes", type=int, default=512)
+  parser.add_argument("--hidden_nodes", type=int, default=1024)
   parser.add_argument("--batch_size", type=int, default=1)
   parser.add_argument("--epochs", type=int, default=100)
   parser.add_argument("--patience", type=int, default=5)
   parser.add_argument("--stateful", action="store_true", default=False)
-  parser.add_argument("--backwards", action="store_true", default=False)
+  #parser.add_argument("--backwards", action="store_true", default=False)
   parser.add_argument("--verbose", type=int, choices=[0, 1, 2], default=1)
   parser.add_argument("--shuffle", choices=['batch', 'true', 'false'], default='true')
-  parser.add_argument("--dropout", type=float, default=0)
+  parser.add_argument("--dropout", type=float, default=0.5)
   parser.add_argument("--layers", type=int, choices=[1, 2, 3], default=1)
   parser.add_argument("--optimizer", choices=['adam', 'rmsprop'], default='rmsprop')
   return parser
@@ -155,8 +166,8 @@ if __name__ == '__main__':
   assert not args.stateful or args.batch_size == 1, "Stateful doesn't work with batch size > 1"
 
   X, y = load_data(args.features, args.locations)
-  X, y = reshape_data(X, y, args)
-  train_X, train_y, valid_X, valid_y = split_data(X, y, args)
+  X, y = reshape_data(X, y, args.seqlen)
+  train_X, train_y, valid_X, valid_y = split_data(X, y, args.train_set)
   model = create_model(X.shape[2], y.shape[2], args)
   model = fit_data(model, train_X, train_y, valid_X, valid_y, args.save_path, args)
   print eval_data(model, train_X, train_y, valid_X, valid_y, args.save_path, args)

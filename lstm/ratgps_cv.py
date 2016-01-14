@@ -25,7 +25,7 @@ def cvfit(model, X, y, k, save_path, args):
 
 if __name__ == '__main__':
   parser = create_parser()
-  parser.add_argument("--cvfolds", type=int, default=2)
+  parser.add_argument("--cvfolds", type=int, default=5)
   args = parser.parse_args()
 
   assert not args.stateful or args.batch_size == 1, "Stateful doesn't work with batch size > 1"
