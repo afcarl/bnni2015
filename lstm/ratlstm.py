@@ -85,7 +85,7 @@ def create_parser():
   parser.add_argument("--hidden_nodes", type=int, default=1024)
   parser.add_argument("--batch_size", type=int, default=1)
   parser.add_argument("--epochs", type=int, default=100)
-  parser.add_argument("--patience", type=int, default=5)
+  parser.add_argument("--patience", type=int, default=10)
   parser.add_argument("--stateful", action="store_true", default=False)
   parser.add_argument("--backwards", action="store_true", default=False)
   parser.add_argument("--verbose", type=int, choices=[0, 1, 2], default=1)
