@@ -8,6 +8,7 @@ parser.add_argument("location_file", default="London_data_2x1000Center_bin100_po
 parser.add_argument("prediction_file", default="test.npy")
 parser.add_argument("--tail", type=int, default=10)
 parser.add_argument("--interval", type=int, default=50)
+parser.add_argument("--video_writer", choices=['ffmpeg', 'mencoder'], default='ffmpeg')
 parser.add_argument("--save_video")
 args = parser.parse_args()
 
@@ -38,6 +39,6 @@ ax.legend(('Actual location', 'Predicted location'), loc='upper center', bbox_to
 
 line_ani = animation.FuncAnimation(fig, update_lines, y.shape[0], interval=args.interval, blit=False, repeat=False)
 if args.save_video:
-  line_ani.save(args.save_video)
+  line_ani.save(args.save_video, writer=args.video_writer)
 else:
   plt.show()
