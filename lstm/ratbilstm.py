@@ -71,6 +71,15 @@ class RatBiLSTM(RatLSTM):
     print 'train dist = %g, validation dist = %g' % (terr, verr)
     return (terr, verr)
 
+  def predict(self, X, load_path):
+    self.model.load_weights(load_path)
+
+    if self.stateful:
+      self.model.reset_states()
+    pred_y = self.model.predict({'input': X}, batch_size=1)['output']
+    print 'pred_y.shape = ', pred_y.shape
+    return pred_y
+
 if __name__ == '__main__':
   parser = create_parser()
   args = parser.parse_args()

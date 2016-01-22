@@ -22,7 +22,7 @@ def load_data(features, locations):
   else:
     assert False, "Unknown location file format"
 
-  print "Original data: ", X.shape, y.shape, np.min(X), np.max(X), np.min(y), np.max(y)
+  print "Original data: ", X.shape, y.shape, np.min(X), np.max(X), np.mean(X), np.std(X), np.min(y), np.max(y)
   assert X.shape[0] == y.shape[0], "Number of samples in features and locations does not match"
   return (X, y)
 
