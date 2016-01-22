@@ -8,7 +8,7 @@ parser.add_argument("location_file", default="London_data_2x1000Center_bin100_po
 parser.add_argument("prediction_file", default="test.npy")
 parser.add_argument("--tail", type=int, default=10)
 parser.add_argument("--interval", type=int, default=50)
-parser.add_argument("--save_mp4")
+parser.add_argument("--save_video")
 args = parser.parse_args()
 
 y = np.loadtxt(args.location_file) / 3.5
@@ -36,7 +36,8 @@ ax.set_position([box.x0, box.y0 + box.height * 0.1,
 # Put a legend below current axis
 ax.legend(('Actual location', 'Predicted location'), loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=2)
 
-line_ani = animation.FuncAnimation(fig, update_lines, y.shape[0], interval=args.interval, blit=False)
-if args.save_mp4:
-  line_ani.save(args.save_mp4)
-plt.show()
+line_ani = animation.FuncAnimation(fig, update_lines, y.shape[0], interval=args.interval, blit=False, repeat=False)
+if args.save_video:
+  line_ani.save(args.save_video)
+else:
+  plt.show()
