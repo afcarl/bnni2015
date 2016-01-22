@@ -5,37 +5,29 @@ import os.path
 from ratlstm import *
 from ratbilstm import *
 
-def cvfit(model, X, y, k, save_path):
+def cvpredict(model, X, k, save_path):
   n = X.shape[0]
   foldsize = math.ceil(n / float(k))
-
   (path, ext) = os.path.splitext(save_path)
   
-  # remember initial weights
-  weights = model.get_weights()
-  results = []
+  preds = []
   for i in xrange(k):
-    train_X = np.vstack((X[:i*foldsize], X[(i+1)*foldsize:]))
-    train_y = np.vstack((y[:i*foldsize], y[(i+1)*foldsize:]))
     valid_X = X[i*foldsize:(i+1)*foldsize]
     valid_y = y[i*foldsize:(i+1)*foldsize]
-    print "train: [:%d], [%d:], valid: [%d:%d]" % (i*foldsize, (i+1)*foldsize, i*foldsize, (i+1)*foldsize)
-    print train_X.shape, train_y.shape, valid_X.shape, valid_y.shape
+    print "valid: [%d:%d]" % (i*foldsize, (i+1)*foldsize)
+    print valid_X.shape, valid_y.shape
 
     model_path = path + "-" + str(i + 1) + ext
-    model.set_weights(weights)
-    model.fit(train_X, train_y, valid_X, valid_y, model_path)
-    result = model.eval(train_X, train_y, valid_X, valid_y, model_path)
-    results.append(result)
+    pred_y = model.predict(valid_X, model_path)
+    preds.append(pred_y)
 
-  mean_dist = tuple(np.mean(results, axis=0))
-  print "train mean dist = %g, valid mean dist = %g" % mean_dist
-  return mean_dist
+  return np.concatenate(preds)
 
 if __name__ == '__main__':
   parser = create_parser()
   parser.add_argument("--cvfolds", type=int, default=5)
-  parser.add_argument("--model", choices=['lstm', 'bilstm'], default='bilstm')
+  parser.add_argument("--model", choices=['lstm', 'bilstm'], default='lstm')
+  parser.add_argument("preds_path")
   args = parser.parse_args()
   assert not args.stateful or args.batch_size == 1, "Stateful doesn't work with batch size > 1"
 
@@ -50,4 +42,6 @@ if __name__ == '__main__':
     assert False, "Unknown model %s" % args.model
 
   model.init(X.shape[2], y.shape[2])
-  cvfit(model, X, y, args.cvfolds, args.save_path)
+  preds = cvpredict(model, X, args.cvfolds, args.save_path)
+  print "Preds: ", preds.shape
+  np.save(args.preds_path, preds)

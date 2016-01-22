@@ -69,6 +69,15 @@ class RatLSTM:
     print 'train dist = %g, validation dist = %g' % (terr, verr)
     return (terr, verr)
 
+  def predict(self, X, load_path):
+    self.model.load_weights(load_path)
+
+    if self.stateful:
+      self.model.reset_states()
+    pred_y = self.model.predict(X, batch_size=1)
+    print 'pred_y.shape = ', pred_y.shape
+    return pred_y
+
   def get_weights(self):
     return self.model.get_weights()
 
