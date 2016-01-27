@@ -29,7 +29,6 @@ if __name__ == '__main__':
   parser.add_argument("--model", choices=['lstm', 'bilstm'], default='lstm')
   parser.add_argument("preds_path")
   args = parser.parse_args()
-  assert not args.stateful or args.batch_size == 1, "Stateful doesn't work with batch size > 1"
 
   X, y = load_data(args.features, args.locations)
   X, y = reshape_data(X, y, args.seqlen)

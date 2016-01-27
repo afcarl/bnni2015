@@ -15,6 +15,8 @@ def mean_distance(y, t, axis=2):
 class RatLSTM:
   def __init__(self, **kwargs):
     self.__dict__.update(kwargs)
+    assert not self.stateful or self.batch_size == 1, "Stateful doesn't work with batch size > 1"
+    assert not self.stateful or self.shuffle == 'false', "Stateful doesn't work with shuffle = true or shuffle = batch"
 
   def init(self, nb_inputs, nb_outputs):
     print "Creating model..."
@@ -107,7 +109,6 @@ def create_parser():
 if __name__ == '__main__':
   parser = create_parser()
   args = parser.parse_args()
-  assert not args.stateful or args.batch_size == 1, "Stateful doesn't work with batch size > 1"
 
   X, y = load_data(args.features, args.locations)
   X, y = reshape_data(X, y, args.seqlen)

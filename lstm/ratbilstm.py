@@ -9,7 +9,7 @@ import argparse
 
 class RatBiLSTM(RatLSTM):
   def __init__(self, **kwargs):
-    self.__dict__.update(kwargs)
+    RatLSTM.__init__(self, **kwargs)
 
   def init(self, nb_inputs, nb_outputs):
     print "Creating model..."
@@ -83,7 +83,6 @@ class RatBiLSTM(RatLSTM):
 if __name__ == '__main__':
   parser = create_parser()
   args = parser.parse_args()
-  assert not args.stateful or args.batch_size == 1, "Stateful doesn't work with batch size > 1"
 
   X, y = load_data(args.features, args.locations)
   X, y = reshape_data(X, y, args.seqlen)
