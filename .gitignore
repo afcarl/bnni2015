@@ -4,3 +4,4 @@
 /text/*.gz
 /backup
 /baseline/.ipynb_checkpoints
+/lstm/.ipynb_checkpoints
