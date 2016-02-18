@@ -1,11 +1,17 @@
 from keras.models import Graph
-from keras.layers.core import TimeDistributedDense, Activation, Dropout
+from keras.layers.core import TimeDistributedDense, Activation, Dropout, Lambda
 from keras.layers.recurrent import LSTM
 from keras.callbacks import ModelCheckpoint, EarlyStopping, Callback
 from ratdata import *
 from ratlstm import *
 import numpy as np
 import argparse
+
+def reverse_func(x):
+  import keras.backend as K
+  assert K.ndim(x) == 3, "Should be a 3D tensor."
+  rev = K.permute_dimensions(x, (1, 0, 2))[::-1]
+  return K.permute_dimensions(rev, (1, 0, 2))
 
 class RatBiLSTM(RatLSTM):
   def __init__(self, **kwargs):
@@ -19,9 +25,10 @@ class RatBiLSTM(RatLSTM):
       self.model.add_node(LSTM(self.hidden_nodes, return_sequences=True, stateful=self.stateful), name='forward'+str(i+1), 
           input='input' if i == 0 else 'dropout'+str(i) if self.dropout > 0 else None, 
           inputs=['forward'+str(i), 'backward'+str(i)] if i > 0 and self.dropout == 0 else [])
-      self.model.add_node(LSTM(self.hidden_nodes, return_sequences=True, stateful=self.stateful, go_backwards=True), name='backward'+str(i+1), 
+      self.model.add_node(LSTM(self.hidden_nodes, return_sequences=True, stateful=self.stateful, go_backwards=True), name='backwarda'+str(i+1), 
           input='input' if i == 0 else 'dropout'+str(i) if self.dropout > 0 else None, 
           inputs=['forward'+str(i), 'backward'+str(i)] if i > 0 and self.dropout == 0 else [])
+      self.model.add_node(Lambda(reverse_func), name='backward'+str(i+1), input='backwarda'+str(i+1)) # reverse backwards sequence
       if self.dropout > 0:
         self.model.add_node(Dropout(self.dropout), name='dropout'+str(i+1), inputs=['forward'+str(i+1), 'backward'+str(i+1)])
 
