@@ -16,7 +16,7 @@ def load_data(features, locations):
     y = loadmat(locations)
     y = y['loc'] / 3.5
   elif locations.endswith(".dat"):
-    y = np.loadtxt(locations) / 3.5
+    y = np.loadtxt(locations)
   elif locations.endswith(".npy"):
     y = np.load(locations)
   else:

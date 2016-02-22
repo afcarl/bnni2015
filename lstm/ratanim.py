@@ -10,9 +10,10 @@ parser.add_argument("--tail", type=int, default=10)
 parser.add_argument("--interval", type=int, default=50)
 parser.add_argument("--video_writer", choices=['ffmpeg', 'mencoder'], default='ffmpeg')
 parser.add_argument("--save_video")
+parser.add_argument("--bitrate", type=int, default=100)
 args = parser.parse_args()
 
-y = np.loadtxt(args.location_file) / 3.5
+y = np.loadtxt(args.location_file)
 pred_y = np.load(args.prediction_file).reshape((-1, 2))
 
 def update_lines(num):
@@ -39,6 +40,6 @@ ax.legend(('Actual location', 'Predicted location'), loc='upper center', bbox_to
 
 line_ani = animation.FuncAnimation(fig, update_lines, y.shape[0], interval=args.interval, blit=False, repeat=False)
 if args.save_video:
-  line_ani.save(args.save_video, writer=args.video_writer)
+  line_ani.save(args.save_video, writer=args.video_writer, bitrate=args.bitrate)
 else:
   plt.show()
