@@ -4,7 +4,10 @@ from ratlstm import *
 from ratbilstm import *
 
 if __name__ == '__main__':
-  parser = create_parser()
+  parser = argparse.ArgumentParser()
+  add_data_params(parser)
+  add_model_params(parser)
+  parser.add_argument("save_path")
   parser.add_argument("--model", choices=['lstm', 'bilstm'], default='lstm')
   args = parser.parse_args()
 

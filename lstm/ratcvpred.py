@@ -8,7 +8,6 @@ from ratbilstm import *
 def cvpredict(model, X, k, save_path):
   n = X.shape[0]
   foldsize = math.ceil(n / float(k))
-  (path, ext) = os.path.splitext(save_path)
   
   preds = []
   for i in xrange(k):
@@ -17,17 +16,20 @@ def cvpredict(model, X, k, save_path):
     print "valid: [%d:%d]" % (i*foldsize, (i+1)*foldsize)
     print valid_X.shape, valid_y.shape
 
-    model_path = path + "-" + str(i + 1) + ext
+    model_path = save_path + "-" + str(i + 1) + ".hdf5"
     pred_y = model.predict(valid_X, model_path)
     preds.append(pred_y)
 
   return np.concatenate(preds)
 
 if __name__ == '__main__':
-  parser = create_parser()
+  parser = argparse.ArgumentParser()
+  add_data_params(parser)
+  add_model_params(parser)
+  parser.add_argument("save_path")
+  parser.add_argument("preds_path")
   parser.add_argument("--cvfolds", type=int, default=5)
   parser.add_argument("--model", choices=['lstm', 'bilstm'], default='lstm')
-  parser.add_argument("preds_path")
   args = parser.parse_args()
 
   X, y = load_data(args.features, args.locations)

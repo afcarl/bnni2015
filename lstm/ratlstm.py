@@ -86,15 +86,9 @@ class RatLSTM:
   def set_weights(self, weights):
     return self.model.set_weights(weights)
 
-def create_parser():
-  parser = argparse.ArgumentParser()
-  parser.add_argument("save_path")
-  parser.add_argument("--features", default="London_data_2x1000Center_bin100.dat")
-  parser.add_argument("--locations", default="London_data_2x1000Center_bin100_pos.dat")
-  parser.add_argument("--train_set", type=float, default=0.8)
-  parser.add_argument("--seqlen", type=int, default=100)
-  parser.add_argument("--hidden_nodes", type=int, default=1024)
-  parser.add_argument("--batch_size", type=int, default=1)
+def add_model_params(parser):
+  parser.add_argument("--hidden_nodes", type=int, default=512)
+  parser.add_argument("--batch_size", type=int, default=10)
   parser.add_argument("--epochs", type=int, default=100)
   parser.add_argument("--patience", type=int, default=10)
   parser.add_argument("--stateful", action="store_true", default=False)
@@ -102,12 +96,14 @@ def create_parser():
   parser.add_argument("--verbose", type=int, choices=[0, 1, 2], default=1)
   parser.add_argument("--shuffle", choices=['batch', 'true', 'false'], default='true')
   parser.add_argument("--dropout", type=float, default=0.5)
-  parser.add_argument("--layers", type=int, choices=[1, 2, 3], default=1)
+  parser.add_argument("--layers", type=int, choices=[1, 2, 3], default=2)
   parser.add_argument("--optimizer", choices=['adam', 'rmsprop'], default='rmsprop')
-  return parser
 
 if __name__ == '__main__':
-  parser = create_parser()
+  parser = argparse.ArgumentParser()
+  add_data_params(parser)
+  add_model_params(parser)
+  parser.add_argument("save_path")
   args = parser.parse_args()
 
   X, y = load_data(args.features, args.locations)

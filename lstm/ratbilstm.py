@@ -88,7 +88,10 @@ class RatBiLSTM(RatLSTM):
     return pred_y
 
 if __name__ == '__main__':
-  parser = create_parser()
+  parser = argparse.ArgumentParser()
+  add_data_params(parser)
+  add_model_params(parser)
+  parser.add_argument("save_path")
   args = parser.parse_args()
 
   X, y = load_data(args.features, args.locations)

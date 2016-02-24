@@ -9,8 +9,6 @@ def cvfit(model, X, y, k, save_path):
   n = X.shape[0]
   foldsize = math.ceil(n / float(k))
 
-  (path, ext) = os.path.splitext(save_path)
-  
   # remember initial weights
   weights = model.get_weights()
   results = []
@@ -22,7 +20,7 @@ def cvfit(model, X, y, k, save_path):
     print "train: [:%d], [%d:], valid: [%d:%d]" % (i*foldsize, (i+1)*foldsize, i*foldsize, (i+1)*foldsize)
     print train_X.shape, train_y.shape, valid_X.shape, valid_y.shape
 
-    model_path = path + "-" + str(i + 1) + ext
+    model_path = save_path + "-" + str(i + 1) + ".hdf5"
     model.set_weights(weights)
     model.fit(train_X, train_y, valid_X, valid_y, model_path)
     result = model.eval(train_X, train_y, valid_X, valid_y, model_path)
@@ -33,7 +31,10 @@ def cvfit(model, X, y, k, save_path):
   return mean_dist
 
 if __name__ == '__main__':
-  parser = create_parser()
+  parser = argparse.ArgumentParser()
+  add_data_params(parser)
+  add_model_params(parser)
+  parser.add_argument("save_path")
   parser.add_argument("--cvfolds", type=int, default=5)
   parser.add_argument("--model", choices=['lstm', 'bilstm'], default='lstm')
   args = parser.parse_args()

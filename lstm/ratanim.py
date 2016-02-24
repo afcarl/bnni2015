@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 parser = argparse.ArgumentParser()
-parser.add_argument("location_file", default="London_data_2x1000Center_bin100_pos.dat")
-parser.add_argument("prediction_file", default="test.npy")
+parser.add_argument("location_file")
+parser.add_argument("prediction_file")
 parser.add_argument("--tail", type=int, default=10)
 parser.add_argument("--interval", type=int, default=50)
 parser.add_argument("--video_writer", choices=['ffmpeg', 'mencoder'], default='ffmpeg')
@@ -15,6 +15,7 @@ args = parser.parse_args()
 
 y = np.loadtxt(args.location_file)
 pred_y = np.load(args.prediction_file).reshape((-1, 2))
+y = y[:pred_y.shape[0]]
 
 def update_lines(num):
     start = max(num - args.tail, 0)

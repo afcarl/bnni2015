@@ -62,3 +62,9 @@ def split_data(X, y, train_set):
 
   print "After splitting: ", train_X.shape, train_y.shape, valid_X.shape, valid_y.shape
   return (train_X, train_y, valid_X, valid_y)
+
+def add_data_params(parser):
+  parser.add_argument("--features", default="1_16_London_RNN_data_2x400_at19_bin100-RAW_feat.dat")
+  parser.add_argument("--locations", default="1_16_London_RNN_data_2x400_at19_bin100-RAW_pos.dat")
+  parser.add_argument("--train_set", type=float, default=0.8)
+  parser.add_argument("--seqlen", type=int, default=100)
