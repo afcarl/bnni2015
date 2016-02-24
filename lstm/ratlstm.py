@@ -1,7 +1,7 @@
 from keras.models import Sequential
 from keras.layers.core import TimeDistributedDense, Activation, Dropout
 from keras.layers.recurrent import LSTM
-from keras.callbacks import ModelCheckpoint, EarlyStopping, Callback
+from keras.callbacks import ModelCheckpoint, EarlyStopping, LearningRateScheduler, Callback
 from ratdata import *
 import numpy as np
 import argparse
@@ -36,8 +36,15 @@ class RatLSTM:
     self.model.compile(loss='mean_squared_error', optimizer=self.optimizer)
 
   def fit(self, train_X, train_y, valid_X, valid_y, save_path):
-    callbacks=[ModelCheckpoint(filepath=save_path, verbose=1, save_best_only=True), 
-                   EarlyStopping(patience=self.patience, verbose=1)]
+    callbacks = [ModelCheckpoint(filepath=save_path, verbose=1, save_best_only=str2bool(self.save_best_model_only))]
+    if self.patience:
+      callbacks.append(EarlyStopping(patience=self.patience, verbose=1))
+    if args.lr_epochs:
+      def lr_scheduler(epoch):
+        lr = args.lr / 2**int(epoch / args.lr_epochs)
+        print "Epoch %d: learning rate %g" % (epoch + 1, lr)
+        return lr
+      callbacks.append(LearningRateScheduler(lr_scheduler))
     if self.stateful:
       class StateReset(Callback):
           def on_epoch_begin(self, epoch, logs={}):
@@ -87,7 +94,7 @@ class RatLSTM:
     return self.model.set_weights(weights)
 
 def add_model_params(parser):
-  parser.add_argument("--hidden_nodes", type=int, default=512)
+  parser.add_argument("--hidden_nodes", type=int, default=1024)
   parser.add_argument("--batch_size", type=int, default=10)
   parser.add_argument("--epochs", type=int, default=100)
   parser.add_argument("--patience", type=int, default=10)
@@ -98,6 +105,12 @@ def add_model_params(parser):
   parser.add_argument("--dropout", type=float, default=0.5)
   parser.add_argument("--layers", type=int, choices=[1, 2, 3], default=2)
   parser.add_argument("--optimizer", choices=['adam', 'rmsprop'], default='rmsprop')
+  parser.add_argument("--save_best_model_only", default="1")
+  parser.add_argument("--lr", type=float, default=0.001)
+  parser.add_argument("--lr_epochs", type=int)
+
+def str2bool(v):
+  return v.lower() in ("yes", "true", "t", "1")
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
