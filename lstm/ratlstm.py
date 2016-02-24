@@ -39,9 +39,9 @@ class RatLSTM:
     callbacks = [ModelCheckpoint(filepath=save_path, verbose=1, save_best_only=str2bool(self.save_best_model_only))]
     if self.patience:
       callbacks.append(EarlyStopping(patience=self.patience, verbose=1))
-    if args.lr_epochs:
+    if self.lr_epochs:
       def lr_scheduler(epoch):
-        lr = args.lr / 2**int(epoch / args.lr_epochs)
+        lr = self.lr / 2**int(epoch / self.lr_epochs)
         print "Epoch %d: learning rate %g" % (epoch + 1, lr)
         return lr
       callbacks.append(LearningRateScheduler(lr_scheduler))
