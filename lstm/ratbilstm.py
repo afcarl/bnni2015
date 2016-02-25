@@ -53,30 +53,20 @@ class RatBiLSTM(RatLSTM):
 
     self.model.fit({'input': train_X, 'output': train_y}, batch_size=self.batch_size, nb_epoch=self.epochs, 
         validation_data={'input': valid_X, 'output': valid_y}, 
-        shuffle=self.shuffle if self.shuffle=='batch' else True if self.shuffle=='true' else False,
+        shuffle=self.train_shuffle if self.train_shuffle=='batch' else True if self.train_shuffle=='true' else False,
         verbose=self.verbose, callbacks=callbacks)
 
-  def eval(self, train_X, train_y, valid_X, valid_y, load_path):
+  def eval(self, X, y, load_path):
     self.model.load_weights(load_path)
 
     if self.stateful:
       self.model.reset_states()
-    train_pred_y = self.model.predict({'input': train_X}, batch_size=1)['output']
+    pred_y = self.model.predict({'input': X}, batch_size=1)['output']
 
-    if self.stateful:
-      self.model.reset_states()
-    valid_pred_y = self.model.predict({'input': valid_X}, batch_size=1)['output']
+    err = mse(pred_y, y)
+    dist = mean_distance(pred_y, y)
 
-    terr = mse(train_pred_y, train_y)
-    verr = mse(valid_pred_y, valid_y)
-
-    print 'train mse = %g, validation mse = %g' % (terr, verr)
-
-    terr = mean_distance(train_pred_y, train_y)
-    verr = mean_distance(valid_pred_y, valid_y)
-
-    print 'train dist = %g, validation dist = %g' % (terr, verr)
-    return (terr, verr)
+    return (err, dist)
 
   def predict(self, X, load_path):
     self.model.load_weights(load_path)
@@ -96,9 +86,12 @@ if __name__ == '__main__':
 
   X, y = load_data(args.features, args.locations)
   X, y = reshape_data(X, y, args.seqlen)
-  train_X, train_y, valid_X, valid_y = split_data(X, y, args.train_set)
+  train_X, train_y, valid_X, valid_y = split_data(X, y, args.train_set, args.split_shuffle)
 
   model = RatBiLSTM(**vars(args))
   model.init(X.shape[2], y.shape[2])
-  model.fit(train_X, train_y, valid_X, valid_y, args.save_path)
-  model.eval(train_X, train_y, valid_X, valid_y, args.save_path)
+  model.fit(train_X, train_y, valid_X, valid_y, args.save_path + '.hdf5')
+  terr, tdist = model.eval(train_X, train_y, args.save_path + '.hdf5')
+  verr, vdist = model.eval(valid_X, valid_y, args.save_path + '.hdf5')
+  print 'train mse = %g, validation mse = %g' % (terr, verr)
+  print 'train dist = %g, validation dist = %g' % (tdist, vdist)

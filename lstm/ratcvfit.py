@@ -2,32 +2,45 @@ import numpy as np
 import argparse
 import math
 import os.path
+from ratdata import *
 from ratlstm import *
 from ratbilstm import *
 
-def cvfit(model, X, y, k, save_path):
+def cvfit(model, X, y, args):
   n = X.shape[0]
-  foldsize = math.ceil(n / float(k))
+  foldsize = math.ceil(n / float(args.cvfolds))
 
   # remember initial weights
   weights = model.get_weights()
   results = []
-  for i in xrange(k):
-    train_X = np.vstack((X[:i*foldsize], X[(i+1)*foldsize:]))
-    train_y = np.vstack((y[:i*foldsize], y[(i+1)*foldsize:]))
-    valid_X = X[i*foldsize:(i+1)*foldsize]
-    valid_y = y[i*foldsize:(i+1)*foldsize]
-    print "train: [:%d], [%d:], valid: [%d:%d]" % (i*foldsize, (i+1)*foldsize, i*foldsize, (i+1)*foldsize)
-    print train_X.shape, train_y.shape, valid_X.shape, valid_y.shape
+  for i in xrange(args.cvfolds):
+    test_X = X[i*foldsize:(i+1)*foldsize]
+    test_y = y[i*foldsize:(i+1)*foldsize]
+    rest_X = np.vstack((X[:i*foldsize], X[(i+1)*foldsize:]))
+    rest_y = np.vstack((y[:i*foldsize], y[(i+1)*foldsize:]))
+    print "test: [%d:%d], rest: [:%d], [%d:]" % (i*foldsize, (i+1)*foldsize, i*foldsize, (i+1)*foldsize)
+    print test_X.shape, test_y.shape, rest_X.shape, rest_y.shape
 
-    model_path = save_path + "-" + str(i + 1) + ".hdf5"
+    if args.train_set == 1:
+      train_X = rest_X
+      train_y = rest_y
+      valid_X = test_X
+      valid_y = test_y
+    else:
+      train_X, train_y, valid_X, valid_y = split_data(rest_X, rest_y, args.train_set, args.split_shuffle)
+
+    model_path = args.save_path + "-" + str(i + 1) + ".hdf5"
     model.set_weights(weights)
     model.fit(train_X, train_y, valid_X, valid_y, model_path)
-    result = model.eval(train_X, train_y, valid_X, valid_y, model_path)
-    results.append(result)
+    train_err, train_dist = model.eval(train_X, train_y, model_path)
+    valid_err, valid_dist = model.eval(valid_X, valid_y, model_path)
+    test_err, test_dist = model.eval(test_X, test_y, model_path)
+    print 'train mse = %g, validation mse = %g, test mse = %g' % (train_err, valid_err, test_err)
+    print 'train dist = %g, validation dist = %g, test dist = %g' % (train_dist, valid_dist, test_dist)
+    results.append((train_dist, valid_dist, test_dist))
 
   mean_dist = tuple(np.mean(results, axis=0))
-  print "train mean dist = %g, valid mean dist = %g" % mean_dist
+  print "train mean dist = %g, valid mean dist = %g, test mean dist = %g" % mean_dist
   return mean_dist
 
 if __name__ == '__main__':
@@ -50,4 +63,4 @@ if __name__ == '__main__':
     assert False, "Unknown model %s" % args.model
 
   model.init(X.shape[2], y.shape[2])
-  cvfit(model, X, y, args.cvfolds, args.save_path)
+  cvfit(model, X, y, args)

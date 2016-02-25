@@ -16,7 +16,7 @@ class RatLSTM:
   def __init__(self, **kwargs):
     self.__dict__.update(kwargs)
     assert not self.stateful or self.batch_size == 1, "Stateful doesn't work with batch size > 1"
-    assert not self.stateful or self.shuffle == 'false', "Stateful doesn't work with shuffle = true or shuffle = batch"
+    assert not self.stateful or self.train_shuffle == 'false', "Stateful doesn't work with train_shuffle = true or train_shuffle = batch"
 
   def init(self, nb_inputs, nb_outputs):
     print "Creating model..."
@@ -36,7 +36,7 @@ class RatLSTM:
     self.model.compile(loss='mean_squared_error', optimizer=self.optimizer)
 
   def fit(self, train_X, train_y, valid_X, valid_y, save_path):
-    callbacks = [ModelCheckpoint(filepath=save_path, verbose=1, save_best_only=str2bool(self.save_best_model_only))]
+    callbacks = [ModelCheckpoint(filepath=save_path, verbose=1, save_best_only=self.save_best_model_only)]
     if self.patience:
       callbacks.append(EarlyStopping(patience=self.patience, verbose=1))
     if self.lr_epochs:
@@ -53,30 +53,20 @@ class RatLSTM:
       callbacks.append(StateReset())
 
     self.model.fit(train_X, train_y, batch_size=self.batch_size, nb_epoch=self.epochs, validation_data=(valid_X, valid_y), 
-        shuffle=self.shuffle if self.shuffle=='batch' else True if self.shuffle=='true' else False, 
+        shuffle=self.train_shuffle if self.train_shuffle=='batch' else True if self.train_shuffle=='true' else False, 
         verbose=self.verbose, callbacks=callbacks)
 
-  def eval(self, train_X, train_y, valid_X, valid_y, load_path):
+  def eval(self, X, y, load_path):
     self.model.load_weights(load_path)
 
     if self.stateful:
       self.model.reset_states()
-    train_pred_y = self.model.predict(train_X, batch_size=1)
+    pred_y = self.model.predict(X, batch_size=1)
 
-    if self.stateful:
-      self.model.reset_states()
-    valid_pred_y = self.model.predict(valid_X, batch_size=1)
+    err = mse(pred_y, y)
+    dist = mean_distance(pred_y, y)
 
-    terr = mse(train_pred_y, train_y)
-    verr = mse(valid_pred_y, valid_y)
-
-    print 'train mse = %g, validation mse = %g' % (terr, verr)
-
-    terr = mean_distance(train_pred_y, train_y)
-    verr = mean_distance(valid_pred_y, valid_y)
-
-    print 'train dist = %g, validation dist = %g' % (terr, verr)
-    return (terr, verr)
+    return (err, dist)
 
   def predict(self, X, load_path):
     self.model.load_weights(load_path)
@@ -101,16 +91,13 @@ def add_model_params(parser):
   parser.add_argument("--stateful", action="store_true", default=False)
   parser.add_argument("--backwards", action="store_true", default=False)
   parser.add_argument("--verbose", type=int, choices=[0, 1, 2], default=1)
-  parser.add_argument("--shuffle", choices=['batch', 'true', 'false'], default='true')
+  parser.add_argument("--train_shuffle", choices=['batch', 'true', 'false'], default='true')
   parser.add_argument("--dropout", type=float, default=0.5)
   parser.add_argument("--layers", type=int, choices=[1, 2, 3], default=2)
   parser.add_argument("--optimizer", choices=['adam', 'rmsprop'], default='rmsprop')
-  parser.add_argument("--save_best_model_only", default="1")
+  parser.add_argument("--save_best_model_only", type=str2bool, default="1")
   parser.add_argument("--lr", type=float, default=0.001)
   parser.add_argument("--lr_epochs", type=int)
-
-def str2bool(v):
-  return v.lower() in ("yes", "true", "t", "1")
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
@@ -121,9 +108,12 @@ if __name__ == '__main__':
 
   X, y = load_data(args.features, args.locations)
   X, y = reshape_data(X, y, args.seqlen)
-  train_X, train_y, valid_X, valid_y = split_data(X, y, args.train_set)
+  train_X, train_y, valid_X, valid_y = split_data(X, y, args.train_set, args.split_shuffle)
 
   model = RatLSTM(**vars(args))
   model.init(X.shape[2], y.shape[2])
-  model.fit(train_X, train_y, valid_X, valid_y, args.save_path)
-  model.eval(train_X, train_y, valid_X, valid_y, args.save_path)
+  model.fit(train_X, train_y, valid_X, valid_y, args.save_path + '.hdf5')
+  terr, tdist = model.eval(train_X, train_y, args.save_path + '.hdf5')
+  verr, vdist = model.eval(valid_X, valid_y, args.save_path + '.hdf5')
+  print 'train mse = %g, validation mse = %g' % (terr, verr)
+  print 'train dist = %g, validation dist = %g' % (tdist, vdist)
