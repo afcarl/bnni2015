@@ -41,7 +41,7 @@ class RatLSTM:
       callbacks.append(EarlyStopping(patience=self.patience, verbose=1))
     if self.lr_epochs:
       def lr_scheduler(epoch):
-        lr = self.lr / 2**int(epoch / self.lr_epochs)
+        lr = self.lr * self.lr_factor**int(epoch / self.lr_epochs)
         print "Epoch %d: learning rate %g" % (epoch + 1, lr)
         return lr
       callbacks.append(LearningRateScheduler(lr_scheduler))
@@ -98,6 +98,7 @@ def add_model_params(parser):
   parser.add_argument("--save_best_model_only", type=str2bool, default="1")
   parser.add_argument("--lr", type=float, default=0.001)
   parser.add_argument("--lr_epochs", type=int)
+  parser.add_argument("--lr_factor", type=float, default=0.1)
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
